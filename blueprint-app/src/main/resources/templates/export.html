@@ -1,0 +1,32 @@
+<div class="row">
+  <!-- Rego -->
+  <div class="col-lg-6">
+    <div class="card card-small">
+      <div class="card-body">
+        <h6 class="card-title">
+          Generated Rego
+          <a href="#" data-toggle="tooltip" th:title="#{rego}">
+            <i class="material-icons">help_outline</i>
+          </a>
+        </h6>
+        <textarea class="form-control" id="rego" th:text="${rego}"></textarea>
+      </div>
+    </div>
+  </div>
+  <!-- End Rego -->
+  <!-- Policy Model -->
+  <div class="col-lg-6">
+    <div class="card card-small">
+      <div class="card-body">
+        <h6 class="card-title">
+          Policy Model
+          <a href="#" data-toggle="tooltip" th:title="#{policyModel}">
+            <i class="material-icons">help_outline</i>
+          </a>
+        </h6>
+        <textarea class="form-control" id="policy" th:text="${policy}"></textarea>
+      </div>
+    </div>
+  </div>
+  <!-- End Rego -->
+</div>

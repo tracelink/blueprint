@@ -1,0 +1,65 @@
+<li class="list-group-item rounded-0 configured-statement">
+  <div class="d-flex justify-content-between">
+    <strong class="font-weight-bold my-2" th:text="${baseStatement.name}"></strong>
+    <button class="btn btn-danger px-1 py-1 delete-statement">
+      <i class="material-icons md-24">delete</i>
+    </button>
+  </div>
+  <div th:if="${baseStatement.negationAllowed}"
+       class="custom-control custom-toggle custom-toggle-sm align-self-center mb-1 negated-toggle">
+    <input type="checkbox" class="custom-control-input indexed-element"
+           th:id="'negate-' + ${clauseIndex} + '-' + ${statementIndex}" form="export-form"
+           th:name="|clauses[${clauseIndex}].statements[${statementIndex}].negated|">
+    <label class="custom-control-label"
+           th:for="'negate-' + ${clauseIndex} + '-' + ${statementIndex}">
+      Negate
+      <a href="#" data-toggle="tooltip" th:title="#{negation}">
+        <i class="material-icons">help_outline</i>
+      </a>
+    </label>
+  </div>
+  <div th:if="${!baseStatement.negationAllowed}">
+    <input type="hidden" value="false" class="indexed-element" form="export-form"
+           th:name="|clauses[${clauseIndex}].statements[${statementIndex}].negated|"/>
+  </div>
+  <input type="hidden" th:value="${baseStatement.name}" class="indexed-element" form="export-form"
+         th:name="|clauses[${clauseIndex}].statements[${statementIndex}].baseStatementName|"/>
+  <p th:if="${!baseStatement.arguments.isEmpty()}"
+     class="text-muted d-block border-bottom py-2 mb-0">Arguments</p>
+  <div class="row">
+    <div class="col-lg-6" th:each="argument, stat : ${baseStatement.arguments}">
+      <div class="form-group">
+        <small class="form-text text-muted py-2" th:text="${argument.description}"></small>
+        <select th:if="${argument.enumValues != null}" class="selectpicker indexed-element"
+                data-width="auto" data-style="rounded border" data-live-search="true"
+                th:multiple="${argument.type.name.endsWith('Array')}" form="export-form"
+                th:name="|clauses[${clauseIndex}].statements[${statementIndex}].argumentValues[${stat.index}]|">
+          <option th:each="enumValue : ${argument.enumValues}"
+                  th:data-content="${enumValue}"
+                  th:value="${enumValue}"></option>
+        </select>
+        <div th:if="${argument.enumValues == null || argument.enumValues.isEmpty()}"
+             th:switch="${argument.type.name}">
+          <div th:case="boolean"
+               class="custom-control custom-toggle custom-toggle-sm align-self-center mb-1">
+            <input type="checkbox" class="custom-control-input indexed-element" form="export-form"
+                   th:name="|clauses[${clauseIndex}].statements[${statementIndex}].argumentValues[${stat.index}]|">
+          </div>
+          <input th:case="integer" type="number" step="1" class="form-control indexed-element"
+                 form="export-form"
+                 th:name="|clauses[${clauseIndex}].statements[${statementIndex}].argumentValues[${stat.index}]|"/>
+          <input th:case="number" type="number" step="1" class="form-control indexed-element"
+                 form="export-form"
+                 th:name="|clauses[${clauseIndex}].statements[${statementIndex}].argumentValues[${stat.index}]|"/>
+          <input th:case="string" type="text" class="form-control indexed-element"
+                 form="export-form"
+                 th:name="|clauses[${clauseIndex}].statements[${statementIndex}].argumentValues[${stat.index}]|"/>
+          <select th:case="*" class="selectpicker select-dynamic new-select indexed-element"
+                  form="export-form" data-width="100%" data-style="rounded border" multiple
+                  th:name="|clauses[${clauseIndex}].statements[${statementIndex}].argumentValues[${stat.index}]|">
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</li>

@@ -1,0 +1,449 @@
+{
+  "baseStatements": [
+    {
+      "name": "Allow Apps At Stack Index",
+      "description": "Allow calls from apps at a given call stack index",
+      "negationAllowed": true,
+      "policyTypes": [
+        "System"
+      ],
+      "function": "stack_has_entry_with_app_in",
+      "arguments": [
+        {
+          "constant": false,
+          "description": "The set of apps to allow",
+          "type": "stringArray",
+          "uniqueItems": true,
+          "orderedItems": false
+        },
+        {
+          "constant": false,
+          "description": "The call stack index. Note that negative index values are counted from the end of the stack, e.g. the last item in the stack would be at index -1",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "name": "Allow Direct Apps",
+      "description": "Allow direct calls from apps within the same environment",
+      "negationAllowed": true,
+      "policyTypes": [
+        "System"
+      ],
+      "function": "last_stack_entry_has_app_in",
+      "arguments": [
+        {
+          "constant": false,
+          "description": "The set of apps to allow",
+          "type": "stringArray",
+          "uniqueItems": true,
+          "orderedItems": false,
+          "enumValues": [
+            "tde",
+            "environment-manager",
+            "user-admin"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Allow Intermediate Apps",
+      "description": "Allow calls initiated by apps somewhere in the call stack",
+      "negationAllowed": true,
+      "policyTypes": [
+        "System"
+      ],
+      "function": "stack_has_app_in",
+      "arguments": [
+        {
+          "constant": false,
+          "description": "The set of apps to allow",
+          "type": "stringArray",
+          "uniqueItems": true,
+          "orderedItems": false
+        }
+      ]
+    },
+    {
+      "name": "Allow Origin Apps",
+      "description": "Allow calls from a set of origin apps",
+      "negationAllowed": true,
+      "policyTypes": [
+        "System"
+      ],
+      "function": "origin_has_app_in",
+      "arguments": [
+        {
+          "constant": false,
+          "description": "The set of apps to allow",
+          "type": "stringArray",
+          "uniqueItems": true,
+          "orderedItems": false
+        }
+      ]
+    },
+    {
+      "name": "Allow Origin Modules",
+      "description": "Allow calls from a set of origin modules",
+      "negationAllowed": true,
+      "policyTypes": [
+        "System"
+      ],
+      "function": "origin_has_module_in",
+      "arguments": [
+        {
+          "constant": false,
+          "description": "The set of modules to allow",
+          "type": "stringArray",
+          "uniqueItems": true,
+          "orderedItems": false
+        }
+      ]
+    },
+    {
+      "name": "Allow Direct Handlers",
+      "description": "Allow direct calls from a set of handlers",
+      "negationAllowed": true,
+      "policyTypes": [
+        "System"
+      ],
+      "function": "last_stack_entry_has_method_in",
+      "arguments": [
+        {
+          "constant": false,
+          "description": "The set of handlers to allow",
+          "type": "stringArray",
+          "uniqueItems": true,
+          "orderedItems": false
+        }
+      ]
+    },
+    {
+      "name": "Allow Current Handlers",
+      "description": "Allow calls to a set of handlers",
+      "negationAllowed": true,
+      "policyTypes": [
+        "System"
+      ],
+      "function": "action_has_method_in",
+      "arguments": [
+        {
+          "constant": false,
+          "description": "The set of handlers to allow",
+          "type": "stringArray",
+          "uniqueItems": true,
+          "orderedItems": false
+        }
+      ]
+    },
+    {
+      "name": "Allow Direct Environments",
+      "description": "Allow direct calls from a set of environments",
+      "negationAllowed": true,
+      "policyTypes": [
+        "System"
+      ],
+      "function": "last_stack_entry_has_env_in",
+      "arguments": [
+        {
+          "constant": false,
+          "description": "The set of environments to allow",
+          "type": "stringArray",
+          "uniqueItems": true,
+          "orderedItems": false
+        }
+      ]
+    },
+    {
+      "name": "Allow Active Users",
+      "description": "Allow calls from active users",
+      "negationAllowed": false,
+      "policyTypes": [
+        "Enterprise",
+        "Multienterprise",
+        "User"
+      ],
+      "function": "user_is_active"
+    },
+    {
+      "name": "Allow Authenticated Users",
+      "description": "Allow calls from authenticated users",
+      "negationAllowed": false,
+      "policyTypes": [
+        "Enterprise",
+        "Multienterprise",
+        "User"
+      ],
+      "function": "user_is_authenticated"
+    },
+    {
+      "name": "Allow Company Users",
+      "description": "Allow calls from users that belong to a company",
+      "negationAllowed": false,
+      "policyTypes": [
+        "System"
+      ],
+      "function": "user_has_company_membership",
+      "arguments": [
+        {
+          "constant": false,
+          "description": "The company ID to allow",
+          "type": "string",
+          "uniqueItems": true,
+          "orderedItems": false
+        }
+      ]
+    },
+    {
+      "name": "Allow Users With Membership Permission",
+      "description": "Allow calls from users with the handler membership permission in the appropriate process network or application",
+      "negationAllowed": false,
+      "policyTypes": [
+        "Enterprise",
+        "Multienterprise",
+        "User"
+      ],
+      "function": "user_has_membership_permission"
+    },
+    {
+      "name": "Allow Call Stack Length",
+      "description": "Allow calls where the call stack has a specific length",
+      "negationAllowed": false,
+      "policyTypes": [
+        "System"
+      ],
+      "function": "stack_has_length_in",
+      "arguments": [
+        {
+          "constant": false,
+          "description": "The set of allowed call stack lengths",
+          "type": "integerArray",
+          "uniqueItems": true,
+          "orderedItems": false
+        }
+      ]
+    },
+    {
+      "name": "Allow Empty User",
+      "description": "Allow calls from empty users",
+      "negationAllowed": false,
+      "policyTypes": [
+        "System"
+      ],
+      "function": "user_is_empty"
+    },
+    {
+      "name": "Allow Empty Forwarded User",
+      "description": "Allow forwarded calls from empty users",
+      "negationAllowed": false,
+      "policyTypes": [
+        "System"
+      ],
+      "function": "forwarded_user_is_empty"
+    },
+    {
+      "name": "Allow Same Environment",
+      "description": "Allow calls from the same environment",
+      "negationAllowed": false,
+      "policyTypes": [
+        "System"
+      ],
+      "function": "last_stack_entry_has_same_env"
+    }
+  ],
+  "baseStatementFunctions": [
+    {
+      "name": "stack_has_entry_with_component_in",
+      "description": "Determines whether the stack component at the given stack entry has one of the given values. The stack_entry_idx is treated as a modulo value for the length of the stack. So -1 is the last entry in the stack, -2 is the second-to-last entry, and so on. This avoids index out of bounds errors and simplifies calling the function. Each stack entry has several components, separated by \"|\". The stack_component_idx value tells which one of these components should be compared against the given values. 0: environment, 1: application, 2: module(?), 3: method/handler, 4: version(?)",
+      "policyTypes": [
+        "System"
+      ],
+      "parameters": [
+        "values",
+        "stack_entry_index",
+        "stack_component_index"
+      ],
+      "expression": "stack_length := count(input.authorization.stack)\n    modulo_stack_entry_idx := ((stack_entry_idx % stack_length) + stack_length) % stack_length\n    stack_entry := input.authorization.stack[modulo_stack_entry_idx]\n    stack_components := split(stack_entry, \"|\")\n    0 <= stack_component_idx <= 4\n    values[_] == stack_components[stack_component_idx]"
+    },
+    {
+      "name": "last_stack_entry_has_env_in",
+      "description": "Determines whether the last stack entry has one of the given envs as its env component",
+      "policyTypes": [
+        "System"
+      ],
+      "parameters": [
+        "envs"
+      ],
+      "expression": "stack_has_entry_with_component_in(envs, -2, 0)",
+      "dependencies": [
+        "stack_has_entry_with_component_in"
+      ]
+    },
+    {
+      "name": "last_stack_entry_has_same_env",
+      "description": "Determines whether the last stack call is from the current environment",
+      "policyTypes": [
+        "System"
+      ],
+      "expression": "last_stack_entry_has_env_in([input.authorization.environment.environment])",
+      "dependencies": [
+        "last_stack_entry_has_env_in"
+      ]
+    },
+    {
+      "name": "last_stack_entry_has_app_in",
+      "description": "Determines whether the last stack entry has one of the given apps as its app component",
+      "policyTypes": [
+        "System"
+      ],
+      "parameters": [
+        "apps"
+      ],
+      "expression": "stack_has_entry_with_component_in(apps, -2, 1)",
+      "dependencies": [
+        "stack_has_entry_with_component_in"
+      ]
+    },
+    {
+      "name": "last_stack_entry_has_method_in",
+      "description": "Determines whether the last stack entry has one of the given methods as its method component",
+      "policyTypes": [
+        "System"
+      ],
+      "parameters": [
+        "methods"
+      ],
+      "expression": "stack_has_entry_with_component_in(methods, -2, 3)",
+      "dependencies": [
+        "stack_has_entry_with_component_in"
+      ]
+    },
+    {
+      "name": "stack_has_entry_with_app_in",
+      "description": "Determines whether the stack entry at the given index has one of the given apps as its app component",
+      "policyTypes": [
+        "System"
+      ],
+      "parameters": [
+        "apps",
+        "stack_entry_idx"
+      ],
+      "expression": "stack_has_entry_with_component_in(apps, stack_entry_idx, 1)",
+      "dependencies": [
+        "stack_has_entry_with_component_in"
+      ]
+    },
+    {
+      "name": "stack_has_app_in",
+      "description": "Determines whether one of the given apps is in one of the stack entries",
+      "policyTypes": [
+        "System"
+      ],
+      "parameters": [
+        "apps"
+      ],
+      "expression": "apps[_] == split(input.authorization.stack[_], \"|\")[1]"
+    },
+    {
+      "name": "stack_has_length_in",
+      "description": "Determines whether the stack has one of the given lengths",
+      "policyTypes": [
+        "System"
+      ],
+      "parameters": [
+        "lengths"
+      ],
+      "expression": "lengths[_] == count(input.authorization.stack)"
+    },
+    {
+      "name": "user_is_active",
+      "description": "Determines whether the user is active",
+      "policyTypes": [
+        "Enterprise",
+        "Multienterprise",
+        "User"
+      ],
+      "expression": "input.authorization.principal.User.active == true"
+    },
+    {
+      "name": "user_is_authenticated",
+      "description": "Determines whether the user is authenticated",
+      "policyTypes": [
+        "Enterprise",
+        "Multienterprise",
+        "User"
+      ],
+      "expression": "user := input.authorization.principal.User\n    user.active == true\n    user.id != null\n    user.id != \"\"\n    user.email != null\n    user.email != \"\""
+    },
+    {
+      "name": "user_is_empty",
+      "description": "Determines whether the user is empty",
+      "policyTypes": [
+        "System"
+      ],
+      "expression": "input.authorization.principal == {}"
+    },
+    {
+      "name": "forwarded_user_is_empty",
+      "description": "Determines whether the user is empty (for forwarded requests)",
+      "policyTypes": [
+        "System"
+      ],
+      "expression": "input.authorization.principal == {\n        \"User\": {\n            \"email\": \"unknown\",\n            \"active\": true\n        },\n        \"CompanyMemberships\": [],\n        \"ApplicationMemberships\": [],\n        \"ProcessNetworkMemberships\": []\n    }"
+    },
+    {
+      "name": "user_has_company_membership",
+      "description": "Determines whether the user's company memberships contains the given company ID",
+      "policyTypes": [
+        "System"
+      ],
+      "parameters": [
+        "company_id"
+      ],
+      "expression": "input.authorization.principal.CompanyMemberships[_].networkNodeId == company_id"
+    },
+    {
+      "name": "user_has_membership_permission",
+      "description": "Determines whether an event's \"app:event\" permission is found in the user's memberships for this process network or application",
+      "policyTypes": [
+        "Enterprise",
+        "Multienterprise",
+        "User"
+      ],
+      "expression": "event_components := split(input.authorization.action.currentMethod, \":\")\n    count(event_components) == 3\n    permission := concat(\":\", [event_components[0], event_components[1]])\n    pn_memberships := {membership | membership := input.authorization.principal.ProcessNetworkMemberships[_];\n                              membership.processNetworkId == input.authorization.environment.processNetworkId}\n    app_memberships := {membership | membership := input.authorization.principal.ApplicationMemberships[_];\n                              membership.applicationName == input.authorization.environment.applicationName\n                              membership.applicationOwnerNetworkNodeId == input.authorization.environment.ownerId}\n    memberships := array.concat(pn_memberships, app_memberships)\n    memberships[_].roles[_].permissions[_].permissionName == permission"
+    },
+    {
+      "name": "origin_has_app_in",
+      "description": "Determines whether the origin app is one of the given apps",
+      "policyTypes": [
+        "System"
+      ],
+      "parameters": [
+        "app_names"
+      ],
+      "expression": "app_names[_] == input.authorization.origin.appName"
+    },
+    {
+      "name": "origin_has_module_in",
+      "description": "Determines whether the origin module is one of the given modules",
+      "policyTypes": [
+        "System"
+      ],
+      "parameters": [
+        "module_names"
+      ],
+      "expression": "module_names[_] == split(input.authorization.origin.methodName, \":\")[0]"
+    },
+    {
+      "name": "action_has_method_in",
+      "description": "Determines whether the action's current method is one of the given methods",
+      "policyTypes": [
+        "System"
+      ],
+      "parameters": [
+        "method_names"
+      ],
+      "expression": "method_names[_] == input.authorization.action.currentMethod"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+<li class="list-group-item rounded-0 px-0">
+  <div class="row no-gutters">
+    <div class="col-11">
+      <div class="card shadow-sm">
+        <div class="card-header border-bottom">
+          <div class="d-flex justify-content-between">
+            <h6 class="card-title mb-0">
+              Statements
+              <a href="#" data-toggle="tooltip" th:title="#{configuredStatements}">
+                <i class="material-icons">help_outline</i>
+              </a>
+            </h6>
+            <div>
+              <select class="selectpicker"
+                      data-width="auto" data-style="rounded border" data-live-search="true">
+                <option th:each="baseStatement : ${baseStatements.values()}"
+                        th:data-content="${baseStatement.name}"
+                        th:value="${baseStatement.name}"></option>
+              </select>
+              <button class="btn btn-small btn-outline-success px-1 py-1 add-statement">
+                <i class="material-icons md-24">add</i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <ul class="list-group statements-list"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="col-1 align-self-center text-center">
+      <button class="btn btn-danger px-1 py-1 delete-clause">
+        <i class="material-icons md-24">do_not_disturb_on</i>
+      </button>
+    </div>
+  </div>
+</li>

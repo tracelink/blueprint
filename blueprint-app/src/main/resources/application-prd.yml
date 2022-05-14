@@ -1,0 +1,23 @@
+server:
+  port: 8081
+  forward-headers-strategy: NATIVE
+  tomcat:
+    redirect-context-root: false
+
+spring:
+  jpa:
+    show-sql: false
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+
+  security:
+    oauth2:
+      client:
+        registration:
+          oidc:
+            client-id: ${CLIENT_ID}
+            client-secret: ${CLIENT_SECRET}
+            scope: openid, email
+        provider:
+          oidc:
+            issuer-uri: ${ISSUER_URI}

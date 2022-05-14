@@ -1,0 +1,168 @@
+<div class="row">
+  <!-- Policies -->
+  <div class="col-lg-4">
+    <div class="card card-small mb-4" style="max-height: 750px">
+      <div class="card-header border-bottom">
+        <h6 class="card-title mb-0">
+          Policies
+        </h6>
+      </div>
+      <div class="card-body overflow-auto">
+        <div class="list-group list-group-flush">
+          <a th:each="entry : ${policies}" th:href="'/policies/' + ${entry.value}"
+             th:class="${policyId != null && entry.value == policyId} ? 'list-group-item list-group-item-action active px-3' : 'list-group-item list-group-item-action px-3'"
+             th:text="${entry.key}">
+          </a>
+        </div>
+        <p th:if="${policy == null}" class="card-text">There are no policies to display</p>
+      </div>
+    </div>
+  </div>
+  <!-- End Policies -->
+  <!-- Policy Details -->
+  <div class="col-lg-8">
+    <div th:if="${policy != null}" class="card card-small mb-4">
+      <div class="card-header border-bottom">
+        <div class="d-flex justify-content-between">
+          <h6 class="card-title mb-0">
+            Policy Clauses
+            <a href="#" data-toggle="tooltip" th:title="#{policyClauses}">
+              <i class="material-icons">help_outline</i>
+            </a>
+          </h6>
+          <div class="btn-toolbar" th:if="${delete}">
+            <div class="btn-group">
+              <button class="btn btn-danger p-2" data-toggle="modal"
+                      data-target="#deletePolicyModal" th:data-id="${policyId}">
+                <i class="material-icons md-24">delete</i>
+              </button>
+            </div>
+          </div>
+          <p th:class="mb-0" th:if="${!delete}" th:text="'Author: ' + ${author}"></p>
+        </div>
+      </div>
+      <div class="card-body py-0">
+        <ul class="list-group list-group-flush">
+          <li th:each="clause, cStat : ${policy.clauses}"
+              class="list-group-item rounded-0 px-0">
+            <div class="card shadow-sm">
+              <div class="card-header border-bottom">
+                <h6 class="card-title mb-0">
+                  Statements
+                  <a href="#" data-toggle="tooltip" th:title="#{configuredStatements}">
+                    <i class="material-icons">help_outline</i>
+                  </a>
+                </h6>
+              </div>
+              <div class="card-footer">
+                <ul class="list-group">
+                  <li th:each="statement, sStat : ${clause.statements}"
+                      th:with="baseStatement=${baseStatements.get(statement.baseStatementName)}"
+                      class="list-group-item rounded-0">
+                    <div class="row">
+                      <div class="col-auto align-self-center">
+                        <strong class="font-weight-bold my-2"
+                                th:text="${baseStatement.name}"></strong>
+                      </div>
+                      <div class="col align-self-center">
+                        <div th:if="${baseStatement.negationAllowed}"
+                             class="custom-control custom-toggle custom-toggle-sm align-self-center mb-1">
+                          <input type="checkbox" class="custom-control-input"
+                                 th:id="'negate-' + ${cStat.index} + '-' + ${sStat.index}"
+                                 th:checked="${statement.negated}" disabled>
+                          <label class="custom-control-label"
+                                 th:for="'negate-' + ${cStat.index} + '-' + ${sStat.index}">
+                            Negated
+                            <a href="#" data-toggle="tooltip" th:title="#{negation}">
+                              <i class="material-icons">help_outline</i>
+                            </a>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    <p th:if="${!baseStatement.arguments.isEmpty()}"
+                       class="text-muted d-block border-bottom py-2 mb-0">
+                      Arguments</p>
+                    <div class="row">
+                      <div class="col-lg-6"
+                           th:each="argument, aStat : ${baseStatement.arguments}">
+                        <div class="form-group">
+                          <small class="form-text text-muted py-2"
+                                 th:text="${argument.description}"></small>
+                          <select
+                              th:if="${argument.enumValues != null && !argument.enumValues.isEmpty()}"
+                              class="selectpicker" data-width="100%" data-style="rounded border"
+                              data-live-search="true"
+                              th:multiple="${argument.type.name.endsWith('Array')}" disabled>
+                            <option th:each="enumValue : ${argument.enumValues}"
+                                    th:data-content="${enumValue}"
+                                    th:selected="${aStat.index < statement.argumentValues.size() && statement.argumentValues.get(aStat.index) != null ? (argument.type.name.endsWith('Array') ? #lists.contains(#strings.listSplit(statement.argumentValues.get(aStat.index), ','), enumValue) : statement.argumentValues.get(aStat.index).equals(enumValue)) : false}"></option>
+                          </select>
+                          <th:block
+                              th:if="${argument.enumValues == null || argument.enumValues.isEmpty()}"
+                              th:switch="${argument.type.name}">
+                            <div th:case="boolean"
+                                 class="custom-control custom-toggle custom-toggle-sm align-self-center mb-1">
+                              <input type="checkbox" class="form-control"
+                                     th:checked="${aStat.index < statement.argumentValues.size() && statement.argumentValues.get(aStat.index) != null && statement.argumentValues.get(aStat.index)}"
+                                     disabled>
+                            </div>
+                            <input th:case="integer" type="number" step="1" class="form-control"
+                                   th:value="${aStat.index < statement.argumentValues.size() && statement.argumentValues.get(aStat.index) != null ? statement.argumentValues.get(aStat.index) : ''}"
+                                   disabled/>
+                            <input th:case="number" type="number" step="1" class="form-control"
+                                   th:value="${aStat.index < statement.argumentValues.size() && statement.argumentValues.get(aStat.index) != null ? statement.argumentValues.get(aStat.index) : ''}"
+                                   disabled/>
+                            <input th:case="string" type="text" class="form-control"
+                                   th:value="${aStat.index < statement.argumentValues.size() && statement.argumentValues.get(aStat.index) != null ? statement.argumentValues.get(aStat.index) : ''}"
+                                   disabled/>
+                            <select th:case="*" class="selectpicker" data-width="100%"
+                                    data-style="rounded border" multiple disabled>
+                              <th:block
+                                  th:if="${aStat.index < statement.argumentValues.size() && statement.argumentValues.get(aStat.index) != null}">
+                                <option
+                                    th:each="value : ${statement.argumentValues.get(aStat.index).split(',')}"
+                                    th:data-content="${value}"
+                                    selected></option>
+                              </th:block>
+                            </select>
+                          </th:block>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- End Policy Details -->
+</div>
+<!-- Delete Policy Modal -->
+<div class="modal fade" id="deletePolicyModal" tabindex="-1" role="dialog"
+     aria-labelledby="deletePolicyLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="deletePolicyLabel">
+          <i class="material-icons">delete</i> Delete Policy
+        </h4>
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this policy?</p>
+      </div>
+      <div class="modal-footer">
+        <form class="form-inline" id="delete-form" method="post" action="#">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <button class="btn btn-danger px-2" type="submit">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Delete Policy Modal -->

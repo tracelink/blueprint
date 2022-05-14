@@ -1,0 +1,121 @@
+<div class="row mb-2">
+  <div class="col-lg-12 col-md-12 col-sm-12">
+    <div class="card card-small d-flex flex-column mb-3">
+      <div class="card-header border-bottom">
+        <h6 class="m-0" th:text="'User Profile: ' + ${user.getUsername()}"></h6>
+      </div>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item px-3 py-0">
+            <div class="row border-bottom py-4">
+              <div class="col">
+                <p class="font-weight-bold mb-0">Role</p>
+              </div>
+              <div class="col border-left">
+                <p class="mb-0" th:text="${user.getRolesString()}"></p>
+              </div>
+            </div>
+            <div class="row border-bottom py-4">
+              <div class="col">
+                <p class="font-weight-bold mb-0">Created</p>
+              </div>
+              <div class="col border-left">
+                <p class="mb-0" th:text="${#dates.formatISO(user.getCreated())}"></p>
+              </div>
+            </div>
+            <div class="row border-bottom py-4">
+              <div class="col">
+                <p class="font-weight-bold mb-0">Last Login</p>
+              </div>
+              <div class="col border-left">
+                <p class="mb-0" th:text="${#dates.formatISO(user.getLastLogin())}"></p>
+              </div>
+            </div>
+            <div class="row border-bottom py-4">
+              <div class="col">
+                <p class="font-weight-bold mb-0">Last Modified</p>
+              </div>
+              <div class="col border-left">
+                <p class="mb-0" th:text="${#dates.formatISO(user.getLastModified())}"></p>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<div th:if="${showActions}" class="row">
+  <div class="col">
+    <div class="card card-small mb-2">
+      <div class="card-header border-bottom">
+        <h6 class="m-0">Actions</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-lg-4">
+            <form class="form-inline" th:action="${'/usermgmt/' + user.getId() + '/changepw'}"
+                  method="post">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <input class="form-control mr-2" type="password" name="newPassword"/>
+              <button class='btn btn-warning' type='submit'>Change Password</button>
+            </form>
+          </div>
+          <div class="col-lg-4">
+            <form class="form-inline" th:action="${'/usermgmt/' + user.getId() + '/setrole'}"
+                  method="post">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <select class="selectpicker mr-2" name="roleId" multiple>
+                <option th:each="role:${roles}" th:value="${role.getId()}"
+                        th:text="${role.getRoleName() + ' - ' + role.getDescription()}"
+                        th:selected="${#lists.contains(#strings.listSplit(user.getRolesString(), ', '), role.getRoleName())}">
+              </select>
+              <button class='btn btn-warning' type='submit'>Set Role</button>
+            </form>
+          </div>
+          <div class="col-lg-4">
+            <form class="py-2" th:action="${'/usermgmt/' + user.getId() + '/delete'}"
+                  method="post">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <button class='btn btn-danger' type='submit'>Delete</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div th:if="${localUser}" class="row">
+  <div class="col-lg-12">
+    <div class="card card-small mb-2">
+      <div class="card-header border-bottom">
+        <h6 class="m-0">Change Password</h6>
+      </div>
+      <div class="row p-3">
+        <div class="col">
+          <form action="/profile/change-password" method="POST">
+            <div class="form-group">
+              <label class="font-weight-bold" for="currentpw">Current Password</label>
+              <input type="password" class="form-control" id="currentpw"
+                     name="currentPassword" placeholder="Current"
+                     th:text="${wrong_pw == null} ? '' : ${wrong_pw}">
+            </div>
+            <div class="form-group">
+              <label class="font-weight-bold" for="newpw">New Password</label>
+              <input type="password" class="form-control" id="newpw" name="newPassword"
+                     placeholder="New">
+            </div>
+            <div class="form-group">
+              <label class="font-weight-bold" for="confirmpw">Confirm Password</label>
+              <input type="password" class="form-control" id="confirmpw"
+                     name="confirmPassword" placeholder="Confirm">
+            </div>
+            <input type="hidden" th:name="${_csrf.parameterName}"
+                   th:value="${_csrf.token}"/>
+            <button type="submit" class="btn btn-primary">Change Password</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
