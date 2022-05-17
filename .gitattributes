@@ -1,0 +1,17 @@
+# Marking Shards JS files as vendored
+blueprint-app/src/main/resources/static/scripts/shards.min.js linguist-vendored
+
+# Marking Shards styles as vendored
+blueprint-app/src/main/resources/static/styles/accents/** linguist-vendored
+blueprint-app/src/main/resources/static/styles/scss/** linguist-vendored
+blueprint-app/src/main/resources/static/styles/extras.1.0.0.min.css linguist-vendored
+blueprint-app/src/main/resources/static/styles/shards.css linguist-vendored
+blueprint-app/src/main/resources/static/styles/shards.css.map linguist-vendored
+blueprint-app/src/main/resources/static/styles/shards.min.css linguist-vendored
+blueprint-app/src/main/resources/static/styles/shards.min.css.map linguist-vendored
+
+# Marking Material Icons styles as vendored
+blueprint-app/src/main/resources/static/styles/icons.css linguist-vendored
+
+# Marking Font Awesome styles as vendored
+blueprint-app/src/main/resources/static/styles/font-awesome-all.css linguist-vendored

@@ -1,0 +1,6 @@
+**/bin/
+**/logs/
+.idea/
+*.iml
+**/target/
+**/non-blank
