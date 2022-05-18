@@ -1,47 +1,53 @@
 package com.tracelink.prodsec.blueprint.core.statement;
 
+import com.tracelink.prodsec.blueprint.core.argument.ArgumentType;
+import com.tracelink.prodsec.blueprint.core.report.PolicyBuilderReport;
+import com.tracelink.prodsec.blueprint.core.visitor.AbstractPolicyNode;
+import com.tracelink.prodsec.blueprint.core.visitor.PolicyVisitor;
 import java.util.Objects;
 import java.util.Set;
-
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-
-import com.tracelink.prodsec.blueprint.core.argument.ArgumentType;
 
 /**
  * Model Object for a base statement argument.
  *
  * @author mcool
  */
-public class BaseStatementArgument {
+public class BaseStatementArgument extends AbstractPolicyNode {
 
-	@NotNull(message = "Constant cannot be null", groups = {ConstantArgument.class,
-		ConfiguredArgument.class}) // TODO test this, groups?
-	private boolean constant;
-	@NotBlank(message = "Value cannot be blank for a constant argument", groups = ConstantArgument.class)
-	private String value;
-	@NotBlank(message = "Description cannot be blank for a configured argument", groups = ConfiguredArgument.class)
+	private BaseStatement parent;
+	private int index;
+
+	@NotBlank(message = "Parameter cannot be blank")
+	private String parameter;
+	@NotBlank(message = "Description cannot be blank")
 	private String description;
-	@NotNull(message = "Argument type cannot be null for a configured argument", groups = ConfiguredArgument.class)
+	@NotNull(message = "Argument type cannot be null")
 	private ArgumentType type;
-	private Set<@NotBlank(message = "Enumerated values cannot be blank for a configured argument", groups = ConfiguredArgument.class) String> enumValues;
-	private boolean uniqueItems;
-	private boolean orderedItems;
+	// enumValues may be null or empty
+	private Set<@NotBlank(message = "Enumerated values cannot be blank") String> enumValues;
+	private boolean arrayUnordered;
+	private boolean arrayUnique;
 
-	public boolean isConstant() {
-		return constant;
+	public void setParent(BaseStatement parent) {
+		this.parent = parent;
 	}
 
-	public void setConstant(boolean constant) {
-		this.constant = constant;
+	public int getIndex() {
+		return index;
 	}
 
-	public String getValue() {
-		return value;
+	public void setIndex(int index) {
+		this.index = index;
 	}
 
-	public void setValue(String value) {
-		this.value = value;
+	public String getParameter() {
+		return parameter;
+	}
+
+	public void setParameter(String parameter) {
+		this.parameter = parameter;
 	}
 
 	public String getDescription() {
@@ -68,20 +74,40 @@ public class BaseStatementArgument {
 		this.enumValues = enumValues;
 	}
 
-	public boolean hasUniqueItems() {
-		return uniqueItems;
+	public boolean isArrayUnordered() {
+		return arrayUnordered;
 	}
 
-	public void setUniqueItems(boolean uniqueItems) {
-		this.uniqueItems = uniqueItems;
+	public void setArrayUnordered(boolean arrayUnordered) {
+		this.arrayUnordered = arrayUnordered;
 	}
 
-	public boolean hasOrderedItems() {
-		return orderedItems;
+	public boolean isArrayUnique() {
+		return arrayUnique;
 	}
 
-	public void setOrderedItems(boolean orderedItems) {
-		this.orderedItems = orderedItems;
+	public void setArrayUnique(boolean arrayUnique) {
+		this.arrayUnique = arrayUnique;
+	}
+
+	@Override
+	public Iterable<? extends AbstractPolicyNode> children() {
+		return null;
+	}
+
+	@Override
+	public BaseStatement getParent() {
+		return parent;
+	}
+
+	@Override
+	public PolicyBuilderReport accept(PolicyVisitor visitor, PolicyBuilderReport report) {
+		return visitor.visit(this, report);
+	}
+
+	@Override
+	protected String getLocationIdentifier() {
+		return "arguments[" + index + "]";
 	}
 
 	@Override
@@ -93,17 +119,17 @@ public class BaseStatementArgument {
 			return false;
 		}
 		BaseStatementArgument argument = (BaseStatementArgument) o;
-		return constant == argument.constant && uniqueItems == argument.uniqueItems
-			&& orderedItems == argument.orderedItems && Objects
-			.equals(value, argument.value) && Objects
-			.equals(description, argument.description) && Objects
-			.equals(type, argument.type) && Objects
-			.equals(enumValues, argument.enumValues);
+		return arrayUnique == argument.arrayUnique
+				&& arrayUnordered == argument.arrayUnordered
+				&& Objects.equals(parameter, argument.parameter)
+				&& Objects.equals(description, argument.description)
+				&& Objects.equals(type, argument.type)
+				&& Objects.equals(enumValues, argument.enumValues);
 	}
 
 	@Override
 	public int hashCode() {
 		return Objects
-			.hash(constant, value, description, type, enumValues, uniqueItems, orderedItems);
+				.hash(parameter, description, type, enumValues, arrayUnique, arrayUnordered);
 	}
 }

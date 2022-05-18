@@ -1,11 +1,11 @@
 package com.tracelink.prodsec.blueprint.core.argument;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * An abstract representation of the type of an argument for a base statement. Contains the name
@@ -60,6 +60,16 @@ public abstract class ArgumentType {
 	}
 
 	/**
+	 * Gets the base type for this argument type. E.g. the base type of a string argument is string,
+	 * and the base type of a string array argument is string.
+	 *
+	 * @return the base type of this argument type
+	 */
+	public ArgumentType getBaseType() {
+		return this;
+	}
+
+	/**
 	 * Gets the list of items from the given argument value array. If the argument is not an array
 	 * type, the default is to throw an {@link UnsupportedOperationException}.
 	 *
@@ -68,16 +78,12 @@ public abstract class ArgumentType {
 	 */
 	public List<?> getArrayItems(String configuredArgument) {
 		throw new UnsupportedOperationException(
-			"A " + getDisplayName() + " is not an array argument type");
+				"A " + getDisplayName().toLowerCase() + " is not an array argument type");
 	}
 
 	@JsonCreator
 	public static ArgumentType getTypeForName(String name) {
-		List<ArgumentType> argumentTypes = Arrays
-			.asList(new StringArgumentType(), new NumberArgumentType(),
-				new IntegerArgumentType(), new BooleanArgumentType(),
-				new StringArrayArgumentType(), new NumberArrayArgumentType(),
-				new IntegerArrayArgumentType());
+		List<ArgumentType> argumentTypes = getTypes();
 
 		for (ArgumentType argumentType : argumentTypes) {
 			if (argumentType.getName().equals(name)) {
@@ -85,6 +91,15 @@ public abstract class ArgumentType {
 			}
 		}
 		return null;
+	}
+
+	public static List<ArgumentType> getTypes() {
+		List<ArgumentType> argumentTypes = Arrays
+				.asList(new StringArgumentType(), new NumberArgumentType(),
+						new IntegerArgumentType(), new BooleanArgumentType(),
+						new StringArrayArgumentType(), new NumberArrayArgumentType(),
+						new IntegerArrayArgumentType());
+		return Collections.unmodifiableList(argumentTypes);
 	}
 
 	@Override

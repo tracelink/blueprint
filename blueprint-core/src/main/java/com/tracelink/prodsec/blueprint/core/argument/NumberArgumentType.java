@@ -8,7 +8,7 @@ package com.tracelink.prodsec.blueprint.core.argument;
 public class NumberArgumentType extends ArgumentType {
 
 	NumberArgumentType() {
-		super("number", "number", false);
+		super("number", "Number", false);
 	}
 
 	/**

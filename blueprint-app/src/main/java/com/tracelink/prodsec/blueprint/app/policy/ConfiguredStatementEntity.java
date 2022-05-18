@@ -17,6 +17,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import com.tracelink.prodsec.blueprint.app.statement.BaseStatementEntity;
+import com.tracelink.prodsec.blueprint.core.policy.ConfiguredStatement;
 
 /**
  * Entity for a single configured statement in a policy clause.
@@ -41,7 +42,7 @@ public class ConfiguredStatementEntity {
 
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "statement_id", nullable = false)
-	private List<ArgumentEntity> arguments = new ArrayList<>();
+	private List<ConfiguredStatementArgumentEntity> arguments = new ArrayList<>();
 
 	public BaseStatementEntity getBaseStatement() {
 		return baseStatement;
@@ -60,15 +61,29 @@ public class ConfiguredStatementEntity {
 	}
 
 	public List<String> getArgumentValues() {
-		return arguments.stream().map(ArgumentEntity::getValue).collect(Collectors.toList());
+		return arguments.stream().map(ConfiguredStatementArgumentEntity::getValue)
+				.collect(Collectors.toList());
 	}
 
 	public void setArgumentValues(List<String> arguments) {
 		if (arguments != null) {
 			this.arguments.clear();
-			this.arguments = arguments.stream().map(ArgumentEntity::new)
+			this.arguments = arguments.stream().map(ConfiguredStatementArgumentEntity::new)
 					.collect(Collectors.toList());
 		}
+	}
+
+	/**
+	 * Converts this entity object to a core object for validation and export.
+	 *
+	 * @return the core representation of this entity
+	 */
+	public ConfiguredStatement toCore() {
+		ConfiguredStatement statement = new ConfiguredStatement();
+		statement.setBaseStatement(baseStatement.toCore());
+		statement.setNegated(negated);
+		statement.setArgumentValues(getArgumentValues());
+		return statement;
 	}
 
 	/**
@@ -78,7 +93,7 @@ public class ConfiguredStatementEntity {
 	 */
 	public ConfiguredStatementDto toDto() {
 		ConfiguredStatementDto dto = new ConfiguredStatementDto();
-		dto.setBaseStatementName(baseStatement.getName());
+		dto.setBaseStatementName(baseStatement.getVersionedName());
 		dto.setNegated(negated);
 		dto.setArgumentValues(getArgumentValues());
 		return dto;

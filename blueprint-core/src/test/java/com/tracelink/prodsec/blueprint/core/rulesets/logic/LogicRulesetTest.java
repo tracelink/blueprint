@@ -1,15 +1,14 @@
 package com.tracelink.prodsec.blueprint.core.rulesets.logic;
 
 import com.tracelink.prodsec.blueprint.core.policy.PolicyMaker;
-import com.tracelink.prodsec.blueprint.core.rules.PolicyRuleset;
 import com.tracelink.prodsec.blueprint.core.rulesets.AbstractRulesetTest;
-import com.tracelink.prodsec.blueprint.core.rulesets.logic.LogicRuleset;
+import com.tracelink.prodsec.blueprint.core.rulesets.PolicyRuleset;
 
 public class LogicRulesetTest extends AbstractRulesetTest {
 
 	@Override
 	protected PolicyRuleset makeRuleset() {
-		return new LogicRuleset(false);
+		return new LogicRuleset();
 	}
 
 	@Override

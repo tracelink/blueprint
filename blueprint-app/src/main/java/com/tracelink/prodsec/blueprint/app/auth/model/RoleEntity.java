@@ -34,11 +34,6 @@ public class RoleEntity {
 		return id;
 	}
 
-	public RoleEntity setId(long id) {
-		this.id = id;
-		return this;
-	}
-
 	public String getRoleName() {
 		return roleName;
 	}

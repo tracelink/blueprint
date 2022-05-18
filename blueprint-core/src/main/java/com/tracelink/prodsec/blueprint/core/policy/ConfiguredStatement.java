@@ -1,6 +1,14 @@
 package com.tracelink.prodsec.blueprint.core.policy;
 
+import com.tracelink.prodsec.blueprint.core.argument.ArgumentType;
+import com.tracelink.prodsec.blueprint.core.report.PolicyBuilderReport;
+import com.tracelink.prodsec.blueprint.core.statement.BaseStatement;
+import com.tracelink.prodsec.blueprint.core.statement.BaseStatementArgument;
+import com.tracelink.prodsec.blueprint.core.statement.BaseStatementFunction;
+import com.tracelink.prodsec.blueprint.core.visitor.AbstractPolicyNode;
+import com.tracelink.prodsec.blueprint.core.visitor.PolicyVisitor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -8,17 +16,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-
-import com.tracelink.prodsec.blueprint.core.argument.ArgumentType;
-import com.tracelink.prodsec.blueprint.core.rules.PolicyReport;
-import com.tracelink.prodsec.blueprint.core.rules.PolicyVisitor;
-import com.tracelink.prodsec.blueprint.core.statement.BaseStatement;
-import com.tracelink.prodsec.blueprint.core.statement.BaseStatementArgument;
-import com.tracelink.prodsec.blueprint.core.statement.BaseStatementFunction;
 
 /**
  * Model for a single configured statement in a policy clause.
@@ -27,16 +26,24 @@ import com.tracelink.prodsec.blueprint.core.statement.BaseStatementFunction;
  */
 public class ConfiguredStatement extends AbstractPolicyNode {
 
-	private final PolicyClause parentClause;
+	private PolicyClause parent;
+	private int index;
 	@NotNull(message = "Base statement cannot be null")
-	@Valid
 	private BaseStatement baseStatement;
 	private boolean negated;
+	@NotNull(message = "Argument values list cannot be null")
 	private List<@NotBlank(message = "Argument values cannot be blank") String> argumentValues = new ArrayList<>();
-	private int index;
 
-	public ConfiguredStatement(PolicyClause parent) {
-		this.parentClause = parent;
+	public void setParent(PolicyClause parent) {
+		this.parent = parent;
+	}
+
+	public int getIndex() {
+		return index;
+	}
+
+	public void setIndex(int index) {
+		this.index = index;
 	}
 
 	public BaseStatement getBaseStatement() {
@@ -44,6 +51,8 @@ public class ConfiguredStatement extends AbstractPolicyNode {
 	}
 
 	public void setBaseStatement(BaseStatement baseStatement) {
+		// Set parent
+		baseStatement.setParent(this);
 		this.baseStatement = baseStatement;
 	}
 
@@ -63,14 +72,6 @@ public class ConfiguredStatement extends AbstractPolicyNode {
 		this.argumentValues = argumentValues;
 	}
 
-	public int getIndex() {
-		return index;
-	}
-
-	public void setIndex(int index) {
-		this.index = index;
-	}
-
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -81,7 +82,7 @@ public class ConfiguredStatement extends AbstractPolicyNode {
 		}
 		ConfiguredStatement other = (ConfiguredStatement) o;
 		return negated == other.negated && Objects.equals(baseStatement, other.baseStatement)
-			&& areArgumentsEqual(other);
+				&& areArgumentsEqual(other);
 	}
 
 	@Override
@@ -121,10 +122,8 @@ public class ConfiguredStatement extends AbstractPolicyNode {
 	 * @return true if this statement contains the same arguments as the supplied statement
 	 */
 	public boolean areArgumentsEqual(ConfiguredStatement other) {
-		List<BaseStatementArgument> requiredArguments = getRequiredArguments();
-		// If there is no info about the required arguments, do a simple equals on
-		// argument values
-		if (requiredArguments == null) {
+		// If there is no info about the arguments, do a simple equals on argument values
+		if (baseStatement == null || baseStatement.getArguments() == null) {
 			return Objects.equals(argumentValues, other.getArgumentValues());
 		}
 		// Both should have the same number of arguments
@@ -132,56 +131,58 @@ public class ConfiguredStatement extends AbstractPolicyNode {
 			return false;
 		}
 		// Matching arguments should be equal
-		return IntStream.range(0, Math.min(argumentValues.size(), requiredArguments.size()))
-			.allMatch(i -> isArgumentEqual(requiredArguments.get(i), getArgumentValues().get(i),
-				other.getArgumentValues().get(i)));
+		return IntStream
+				.range(0, Math.min(argumentValues.size(), baseStatement.getArguments().size()))
+				.allMatch(i -> isArgumentEqual(baseStatement.getArguments().get(i),
+						getArgumentValues().get(i),
+						other.getArgumentValues().get(i)));
 	}
 
-	private boolean isArgumentEqual(BaseStatementArgument requiredArg, String arg1, String arg2) {
-		if (requiredArg.getType().isArrayType() && !requiredArg.hasOrderedItems()) {
+	private boolean isArgumentEqual(BaseStatementArgument argument, String value1, String value2) {
+		if (argument.getType().isArrayType() && argument.isArrayUnordered()) {
 			// If the arg is an array type and does not have ordered items, compare items
-			return areArgumentItemsEqual(requiredArg.getType(), arg1, arg2);
+			return areArrayItemsEqual(argument.getType(), value1, value2);
 		} else {
 			// A direct equals call will work
-			return Objects.equals(arg1, arg2);
+			return Objects.equals(value1, value2);
 		}
 	}
 
-	private boolean areArgumentItemsEqual(ArgumentType argumentType, String arg1, String arg2) {
+	private boolean areArrayItemsEqual(ArgumentType argumentType, String value1, String value2) {
 		try {
 			// Get the list of items for each argument
-			List<?> items1 = argumentType.getArrayItems(arg1);
-			List<?> items2 = argumentType.getArrayItems(arg2);
+			List<?> items1 = argumentType.getArrayItems(value1);
+			List<?> items2 = argumentType.getArrayItems(value2);
 			// Map the counts of each unique item
 			Map<?, Long> itemCounts1 = items1.stream()
-				.collect(Collectors.groupingBy(e -> e, Collectors.counting()));
+					.collect(Collectors.groupingBy(e -> e, Collectors.counting()));
 			Map<?, Long> itemCounts2 = items2.stream()
-				.collect(Collectors.groupingBy(e -> e, Collectors.counting()));
+					.collect(Collectors.groupingBy(e -> e, Collectors.counting()));
 			// Determine whether the counts maps are equivalent
 			return Objects.equals(itemCounts1, itemCounts2);
 		} catch (NumberFormatException e) {
 			// If we cannot read argument items then return direct equals
-			return Objects.equals(arg1, arg2);
+			return Objects.equals(value1, value2);
 		}
 	}
 
 	private int generateArgumentsHashCode() {
-		List<BaseStatementArgument> requiredArguments = getRequiredArguments();
-		// If there is no info about the required arguments, do a simple hash on
-		// argument values
-		if (requiredArguments == null) {
+		// If there is no info about the arguments, do a simple hash on argument values
+		if (baseStatement == null || baseStatement.getArguments() == null) {
 			return Objects.hash(argumentValues);
 		}
 		int hash = 7;
 		hash = 31 * hash + argumentValues.size();
-		for (int i = 0; i < Math.min(argumentValues.size(), requiredArguments.size()); i++) {
-			hash = 31 * hash + argumentHashCode(requiredArguments.get(i), argumentValues.get(i));
+		for (int i = 0; i < Math.min(argumentValues.size(), baseStatement.getArguments().size());
+				i++) {
+			hash = 31 * hash + argumentHashCode(baseStatement.getArguments().get(i),
+					argumentValues.get(i));
 		}
 		return hash;
 	}
 
 	private int argumentHashCode(BaseStatementArgument requiredArg, String arg) {
-		if (requiredArg.getType().isArrayType() && !requiredArg.hasOrderedItems()) {
+		if (requiredArg.getType().isArrayType() && requiredArg.isArrayUnordered()) {
 			// If the arg is an array type and does not have ordered items, compare items
 			return argumentItemsHashCode(requiredArg.getType(), arg);
 		} else {
@@ -196,7 +197,7 @@ public class ConfiguredStatement extends AbstractPolicyNode {
 			List<?> items = argumentType.getArrayItems(arg);
 			// Map the counts of each unique item
 			Map<?, Long> itemCounts = items.stream()
-				.collect(Collectors.groupingBy(e -> e, Collectors.counting()));
+					.collect(Collectors.groupingBy(e -> e, Collectors.counting()));
 			// Return hash code of counts map
 			return itemCounts.hashCode();
 		} catch (NumberFormatException e) {
@@ -205,34 +206,24 @@ public class ConfiguredStatement extends AbstractPolicyNode {
 		}
 	}
 
-	private List<BaseStatementArgument> getRequiredArguments() {
-		// Ensure this method doesn't throw a NullPointerException
-		if (baseStatement == null || baseStatement.getArguments() == null) {
-			return null;
-		}
-		return baseStatement.getArguments().stream().filter(Objects::nonNull)
-			.filter(arg -> !arg.isConstant())
-			.collect(Collectors.toList());
-	}
-
 	@Override
 	public Iterable<? extends AbstractPolicyNode> children() {
-		return null;
+		return Collections.singletonList(baseStatement);
 	}
 
 	@Override
-	public PolicyReport accept(PolicyVisitor visitor, PolicyReport report) {
+	public PolicyBuilderReport accept(PolicyVisitor visitor, PolicyBuilderReport report) {
 		return visitor.visit(this, report);
 	}
 
 	@Override
 	public PolicyClause getParent() {
-		return parentClause;
+		return parent;
 	}
 
 	@Override
 	protected String getLocationIdentifier() {
-		return "statement[" + index + "]";
+		return "statements[" + index + "]";
 	}
 
 }

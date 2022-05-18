@@ -3,8 +3,6 @@ package com.tracelink.prodsec.blueprint.core.argument;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.tracelink.prodsec.blueprint.core.argument.StringArrayArgumentType;
-
 public class StringArrayArgumentTypeTest {
 
 	@Test
@@ -19,7 +17,12 @@ public class StringArrayArgumentTypeTest {
 		Assert.assertNull(new StringArrayArgumentType().generateRego(null));
 		Assert.assertEquals("[\"foo\"]", new StringArrayArgumentType().generateRego("foo"));
 		Assert.assertEquals("[\"foo\", \"bar\"]",
-			new StringArrayArgumentType().generateRego("foo,bar"));
+				new StringArrayArgumentType().generateRego("foo,bar"));
+	}
+
+	@Test
+	public void testGetBaseType() {
+		Assert.assertEquals("string", new StringArrayArgumentType().getBaseType().getName());
 	}
 
 }

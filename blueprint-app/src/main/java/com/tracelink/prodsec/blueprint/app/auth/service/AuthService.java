@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -258,17 +259,28 @@ public class AuthService implements UserDetailsService {
 		return userRepository.findAll();
 	}
 
-	public void setUserRole(Long userid, Long roleId) throws UserAccountException {
+	/**
+	 * Assigns the roles represented by the given role ids to the user with the given id.
+	 *
+	 * @param userid  the id of the user to assign roles
+	 * @param roleIds the ids of the roles to assign
+	 * @throws UserAccountException if the user or any role does not exist
+	 */
+	public void setUserRoles(Long userid, List<Long> roleIds) throws UserAccountException {
 		Optional<UserEntity> userOpt = userRepository.findById(userid);
-		Optional<RoleEntity> roleOpt = roleRepository.findById(roleId);
 		if (userOpt.isEmpty()) {
 			throw new UserAccountException("Unknown user id");
 		}
-		if (roleOpt.isEmpty()) {
-			throw new UserAccountException("Unknown role id");
+		Set<RoleEntity> roles = new HashSet<>();
+		for (Long roleId : roleIds) {
+			Optional<RoleEntity> roleOpt = roleRepository.findById(roleId);
+			if (roleOpt.isEmpty()) {
+				throw new UserAccountException("Unknown role id");
+			}
+			roles.add(roleOpt.get());
 		}
 		UserEntity user = userOpt.get();
-		user.setRoles(new HashSet<>(Collections.singleton(roleOpt.get())));
+		user.setRoles(roles);
 		saveUser(user);
 	}
 

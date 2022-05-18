@@ -1,14 +1,12 @@
 package com.tracelink.prodsec.blueprint.core.rulesets.logic;
 
-import java.text.MessageFormat;
-import java.util.List;
-import java.util.Objects;
-
 import com.tracelink.prodsec.blueprint.core.policy.ConfiguredStatement;
 import com.tracelink.prodsec.blueprint.core.policy.PolicyClause;
-import com.tracelink.prodsec.blueprint.core.rules.AbstractPolicyRule;
-import com.tracelink.prodsec.blueprint.core.rules.PolicyReport;
-import com.tracelink.prodsec.blueprint.core.rules.RuleSeverity;
+import com.tracelink.prodsec.blueprint.core.report.PolicyBuilderReport;
+import com.tracelink.prodsec.blueprint.core.report.RuleSeverity;
+import com.tracelink.prodsec.blueprint.core.visitor.AbstractPolicyRule;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Determines whether {@linkplain ConfiguredStatement}s are complements of each
@@ -22,14 +20,14 @@ public class SatisfiabilityRule extends AbstractPolicyRule {
 	}
 
 	@Override
-	public PolicyReport visit(PolicyClause node, PolicyReport report) {
+	public PolicyBuilderReport visit(PolicyClause node, PolicyBuilderReport report) {
 		List<ConfiguredStatement> statements = node.getStatements();
 		for (int i = 0; i < statements.size(); i++) {
 			for (int j = i + 1; j < statements.size(); j++) {
 				if (isComplement(statements.get(i), statements.get(j))) {
-					report.addViolation(this, node, MessageFormat.format(
-						"This clause is unsatisfiable. It contains both a statement {0} and its complement {1}",
-						statements.get(i).getLocation(), statements.get(j).getLocation()));
+					report.addViolation(this, node,
+							"This clause is unsatisfiable. Two of the statements are equivalent and one of them is negated");
+					return super.visit(node, report);
 				}
 			}
 		}
@@ -38,13 +36,13 @@ public class SatisfiabilityRule extends AbstractPolicyRule {
 
 	private boolean isComplement(ConfiguredStatement first, ConfiguredStatement second) {
 		return first.isNegated() != second.isNegated()
-			&& Objects.equals(first.getBaseStatement(), second.getBaseStatement())
-			&& first.areArgumentsEqual(second);
+				&& Objects.equals(first.getBaseStatement(), second.getBaseStatement())
+				&& first.areArgumentsEqual(second);
 	}
 
 	@Override
 	public RuleSeverity getSeverity() {
-		return RuleSeverity.HIGH;
+		return RuleSeverity.ERROR;
 	}
 
 }

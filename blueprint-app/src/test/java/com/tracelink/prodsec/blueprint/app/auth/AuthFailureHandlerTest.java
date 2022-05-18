@@ -1,5 +1,6 @@
 package com.tracelink.prodsec.blueprint.app.auth;
 
+import com.tracelink.prodsec.blueprint.app.config.AuthFailureHandler;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
@@ -8,8 +9,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.web.RedirectStrategy;
-
-import com.tracelink.prodsec.blueprint.app.config.AuthFailureHandler;
 
 public class AuthFailureHandlerTest {
 

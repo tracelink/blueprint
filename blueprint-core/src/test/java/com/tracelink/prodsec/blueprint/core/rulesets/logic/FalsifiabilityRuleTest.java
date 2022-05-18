@@ -4,16 +4,13 @@ import com.tracelink.prodsec.blueprint.core.policy.ConfiguredStatement;
 import com.tracelink.prodsec.blueprint.core.policy.Policy;
 import com.tracelink.prodsec.blueprint.core.policy.PolicyClause;
 import com.tracelink.prodsec.blueprint.core.policy.PolicyMaker;
-import com.tracelink.prodsec.blueprint.core.policy.PolicyType;
-import com.tracelink.prodsec.blueprint.core.rules.AbstractPolicyRule;
-import com.tracelink.prodsec.blueprint.core.rules.AbstractPolicyRuleTest;
-import com.tracelink.prodsec.blueprint.core.rules.RuleSeverity;
-import com.tracelink.prodsec.blueprint.core.rulesets.logic.FalsifiabilityRule;
+import com.tracelink.prodsec.blueprint.core.report.RuleSeverity;
+import com.tracelink.prodsec.blueprint.core.rulesets.AbstractRuleTest;
 import com.tracelink.prodsec.blueprint.core.statement.BaseStatement;
-
+import com.tracelink.prodsec.blueprint.core.visitor.AbstractPolicyRule;
 import java.util.Arrays;
 
-public class FalsifiabilityRuleTest extends AbstractPolicyRuleTest {
+public class FalsifiabilityRuleTest extends AbstractRuleTest {
 
 
 	@Override
@@ -25,7 +22,7 @@ public class FalsifiabilityRuleTest extends AbstractPolicyRuleTest {
 
 	@Override
 	protected RuleSeverity expectedSeverity() {
-		return RuleSeverity.HIGH;
+		return RuleSeverity.ERROR;
 	}
 
 	@Override
@@ -37,7 +34,7 @@ public class FalsifiabilityRuleTest extends AbstractPolicyRuleTest {
 	// (A AND NOT B) OR (NOT A AND C) OR (B AND NOT C) OR (A AND B) OR (NOT B AND NOT C)
 	private Policy makeFalsifiablePolicy() {
 		Policy policy = PolicyMaker.createValidBasicPolicy();
-		policy.setPolicyType(new PolicyType("System"));
+		policy.setPolicyType("System");
 
 		//A case
 		BaseStatement aBase = PolicyMaker.createValidBaseStatement();
@@ -51,38 +48,38 @@ public class FalsifiabilityRuleTest extends AbstractPolicyRuleTest {
 		BaseStatement cBase = PolicyMaker.createValidBaseStatement();
 		cBase.setName("C BASE");
 
-		PolicyClause clause1 = new PolicyClause(policy);
+		PolicyClause clause1 = new PolicyClause();
 		clause1.setStatements(Arrays.asList(
-			makeStmt(clause1, aBase, false),
-			makeStmt(clause1, bBase, true)));
+				makeStmt(aBase, false),
+				makeStmt(bBase, true)));
 
-		PolicyClause clause2 = new PolicyClause(policy);
+		PolicyClause clause2 = new PolicyClause();
 		clause2.setStatements(Arrays.asList(
-			makeStmt(clause2, aBase, true),
-			makeStmt(clause2, cBase, false)));
+				makeStmt(aBase, true),
+				makeStmt(cBase, false)));
 
-		PolicyClause clause3 = new PolicyClause(policy);
+		PolicyClause clause3 = new PolicyClause();
 		clause3.setStatements(Arrays.asList(
-			makeStmt(clause3, bBase, false),
-			makeStmt(clause3, cBase, true)));
+				makeStmt(bBase, false),
+				makeStmt(cBase, true)));
 
-		PolicyClause clause4 = new PolicyClause(policy);
+		PolicyClause clause4 = new PolicyClause();
 		clause4.setStatements(Arrays.asList(
-			makeStmt(clause4, aBase, false),
-			makeStmt(clause4, bBase, false)));
+				makeStmt(aBase, false),
+				makeStmt(bBase, false)));
 
-		PolicyClause clause5 = new PolicyClause(policy);
+		PolicyClause clause5 = new PolicyClause();
 		clause5.setStatements(Arrays.asList(
-			makeStmt(clause5, bBase, true),
-			makeStmt(clause5, cBase, true)));
+				makeStmt(bBase, true),
+				makeStmt(cBase, true)));
 
 		policy.setClauses(Arrays.asList(clause1, clause2, clause3, clause4, clause5));
 
 		return policy;
 	}
 
-	private ConfiguredStatement makeStmt(PolicyClause clause, BaseStatement base, boolean negated) {
-		ConfiguredStatement stmt = new ConfiguredStatement(clause);
+	private ConfiguredStatement makeStmt(BaseStatement base, boolean negated) {
+		ConfiguredStatement stmt = new ConfiguredStatement();
 		stmt.setBaseStatement(base);
 		stmt.setNegated(negated);
 		return stmt;

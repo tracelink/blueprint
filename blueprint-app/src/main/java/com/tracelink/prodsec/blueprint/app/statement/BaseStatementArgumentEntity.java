@@ -29,11 +29,8 @@ public class BaseStatementArgumentEntity {
 	@Column(name = "argument_id")
 	private long id;
 
-	@Column(name = "constant")
-	private boolean constant;
-
-	@Column(name = "constant_value")
-	private String value;
+	@Column(name = "parameter")
+	private String parameter;
 
 	@Column(name = "description")
 	private String description;
@@ -46,30 +43,22 @@ public class BaseStatementArgumentEntity {
 	@Convert(converter = StringSetConverter.class)
 	private Set<String> enumValues;
 
-	@Column(name = "unique_items")
-	private boolean uniqueItems;
+	@Column(name = "array_unordered")
+	private boolean arrayUnordered;
 
-	@Column(name = "ordered_items")
-	private boolean orderedItems;
+	@Column(name = "array_unique")
+	private boolean arrayUnique;
 
 	public long getId() {
 		return id;
 	}
 
-	public boolean isConstant() {
-		return constant;
+	public String getParameter() {
+		return parameter;
 	}
 
-	public void setConstant(boolean constant) {
-		this.constant = constant;
-	}
-
-	public String getValue() {
-		return value;
-	}
-
-	public void setValue(String value) {
-		this.value = value;
+	public void setParameter(String parameter) {
+		this.parameter = parameter;
 	}
 
 	public String getDescription() {
@@ -96,20 +85,36 @@ public class BaseStatementArgumentEntity {
 		this.enumValues = enumValues;
 	}
 
-	public boolean hasUniqueItems() {
-		return uniqueItems;
+	public boolean isArrayUnordered() {
+		return arrayUnordered;
 	}
 
-	public void setUniqueItems(boolean uniqueItems) {
-		this.uniqueItems = uniqueItems;
+	public void setArrayUnordered(boolean arrayUnordered) {
+		this.arrayUnordered = arrayUnordered;
 	}
 
-	public boolean hasOrderedItems() {
-		return orderedItems;
+	public boolean isArrayUnique() {
+		return arrayUnique;
 	}
 
-	public void setOrderedItems(boolean orderedItems) {
-		this.orderedItems = orderedItems;
+	public void setArrayUnique(boolean arrayUnique) {
+		this.arrayUnique = arrayUnique;
+	}
+
+	/**
+	 * Creates a revision of this base statement argument, copying all fields except the id.
+	 *
+	 * @return the new revision of this base statement argument
+	 */
+	public BaseStatementArgumentEntity toRevision() {
+		BaseStatementArgumentEntity entity = new BaseStatementArgumentEntity();
+		entity.setParameter(parameter);
+		entity.setDescription(description);
+		entity.setType(type);
+		entity.setEnumValues(enumValues);
+		entity.setArrayUnordered(arrayUnordered);
+		entity.setArrayUnique(arrayUnique);
+		return entity;
 	}
 
 	/**
@@ -119,13 +124,12 @@ public class BaseStatementArgumentEntity {
 	 */
 	public BaseStatementArgument toCore() {
 		BaseStatementArgument argument = new BaseStatementArgument();
-		argument.setConstant(constant);
-		argument.setValue(value);
+		argument.setParameter(parameter);
 		argument.setDescription(description);
 		argument.setType(type);
 		argument.setEnumValues(enumValues);
-		argument.setUniqueItems(uniqueItems);
-		argument.setOrderedItems(orderedItems);
+		argument.setArrayUnordered(arrayUnordered);
+		argument.setArrayUnique(arrayUnique);
 		return argument;
 	}
 
@@ -136,13 +140,12 @@ public class BaseStatementArgumentEntity {
 	 */
 	public BaseStatementArgumentDto toDto() {
 		BaseStatementArgumentDto dto = new BaseStatementArgumentDto();
-		dto.setConstant(constant);
-		dto.setValue(value);
+		dto.setParameter(parameter);
 		dto.setDescription(description);
 		dto.setType(type);
 		dto.setEnumValues(enumValues);
-		dto.setUniqueItems(uniqueItems);
-		dto.setOrderedItems(orderedItems);
+		dto.setArrayUnordered(arrayUnordered);
+		dto.setArrayUnique(arrayUnique);
 		return dto;
 	}
 }

@@ -1,6 +1,6 @@
 package com.tracelink.prodsec.blueprint.core.rulesets.logic;
 
-import com.tracelink.prodsec.blueprint.core.rules.PreconfiguredRuleset;
+import com.tracelink.prodsec.blueprint.core.rulesets.PreconfiguredRuleset;
 
 /**
  * Contains rules for logical failures in Policies
@@ -9,8 +9,8 @@ import com.tracelink.prodsec.blueprint.core.rules.PreconfiguredRuleset;
  */
 public class LogicRuleset extends PreconfiguredRuleset {
 
-	public LogicRuleset(boolean stopOnFirstFailure) {
-		super("Logic Ruleset", stopOnFirstFailure);
+	public LogicRuleset() {
+		super("Logic Ruleset");
 		addPreconfiguredRule(new FalsifiabilityRule());
 		addPreconfiguredRule(new SatisfiabilityRule());
 	}

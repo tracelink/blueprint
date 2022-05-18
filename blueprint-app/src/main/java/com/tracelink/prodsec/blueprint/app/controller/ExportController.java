@@ -5,6 +5,7 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tracelink.prodsec.blueprint.app.exception.PolicyElementNotFoundException;
 import com.tracelink.prodsec.blueprint.app.exception.PolicyException;
 import com.tracelink.prodsec.blueprint.app.mvc.BlueprintModelAndView;
 import com.tracelink.prodsec.blueprint.app.policy.PolicyDto;
@@ -45,7 +47,7 @@ public class ExportController {
 
 	@PostMapping("")
 	public RedirectView exportPolicy(@Valid PolicyDto policyDto, BindingResult result,
-			RedirectAttributes redirectAttributes) {
+			RedirectAttributes redirectAttributes) throws PolicyElementNotFoundException {
 		if (result.hasErrors()) {
 			redirectAttributes.addFlashAttribute("failure", "The policy has validation errors");
 			redirectAttributes.addFlashAttribute(BINDING_RESULT_POLICY, result);
@@ -66,6 +68,20 @@ public class ExportController {
 			redirectView = new RedirectView("?type=" + policyDto.getPolicyType());
 		}
 		return redirectView;
+	}
+
+	/**
+	 * Exception handler for a {@link PolicyElementNotFoundException}. Returns to the Blueprint home
+	 *
+	 * @param e                  the exception thrown
+	 * @param redirectAttributes the redirect attributes to add the exception message
+	 * @return a string redirecting to the main page
+	 */
+	@ExceptionHandler(PolicyElementNotFoundException.class)
+	public RedirectView handlePolicyElementNotFound(Exception e,
+			RedirectAttributes redirectAttributes) {
+		redirectAttributes.addFlashAttribute("failure", e.getMessage());
+		return new RedirectView("/");
 	}
 
 }

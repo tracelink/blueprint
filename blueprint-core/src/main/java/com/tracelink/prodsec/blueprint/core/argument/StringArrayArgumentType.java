@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 public class StringArrayArgumentType extends ArgumentType {
 
 	StringArrayArgumentType() {
-		super("stringArray", "string array", true);
+		super("stringArray", "String Array", true);
 	}
 
 	/**
@@ -27,7 +27,7 @@ public class StringArrayArgumentType extends ArgumentType {
 		if (strings == null) {
 			return false;
 		}
-		// TODO Move this unique check elsewhere? Error to user is that the argument type is wrong if this check fails
+
 		if (uniqueItems) {
 			Set<String> uniqueStrings = new HashSet<>(strings);
 			return strings.size() == uniqueStrings.size();
@@ -57,6 +57,14 @@ public class StringArrayArgumentType extends ArgumentType {
 			return null;
 		}
 		return Arrays.stream(configuredArgument.split(",")).map(String::trim)
-			.collect(Collectors.toList());
+				.collect(Collectors.toList());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ArgumentType getBaseType() {
+		return new StringArgumentType();
 	}
 }

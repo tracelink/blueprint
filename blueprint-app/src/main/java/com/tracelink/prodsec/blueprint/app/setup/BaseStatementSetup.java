@@ -10,6 +10,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tracelink.prodsec.blueprint.app.service.BaseStatementFunctionService;
 import com.tracelink.prodsec.blueprint.app.service.BaseStatementService;
 import com.tracelink.prodsec.blueprint.app.statement.BaseStatementDto;
 import com.tracelink.prodsec.blueprint.app.statement.BaseStatementFunctionDto;
@@ -24,9 +25,12 @@ import com.tracelink.prodsec.blueprint.app.statement.BaseStatementFunctionDto;
 public class BaseStatementSetup {
 
 	private final BaseStatementService baseStatementService;
+	private final BaseStatementFunctionService functionService;
 
-	public BaseStatementSetup(@Autowired BaseStatementService baseStatementService) {
+	public BaseStatementSetup(@Autowired BaseStatementService baseStatementService,
+			@Autowired BaseStatementFunctionService functionService) {
 		this.baseStatementService = baseStatementService;
+		this.functionService = functionService;
 	}
 
 	/**
@@ -42,8 +46,15 @@ public class BaseStatementSetup {
 			ObjectMapper objectMapper = new ObjectMapper();
 			BaseStatementImportDto importedBaseStatements = objectMapper
 					.readValue(is, BaseStatementImportDto.class);
-			baseStatementService.importBaseStatements(importedBaseStatements.getBaseStatements(),
-					importedBaseStatements.getBaseStatementFunctions());
+			// Set author on functions and base statements
+			importedBaseStatements.getFunctions()
+					.forEach(function -> function.setAuthor("admin"));
+			importedBaseStatements.getBaseStatements().forEach(baseStatement -> baseStatement
+					.setAuthor("admin"));
+			// Validate and save functions to the database
+			functionService.importBaseStatementFunctions(importedBaseStatements.getFunctions());
+			// Validate and save base statements to the database
+			baseStatementService.importBaseStatements(importedBaseStatements.getBaseStatements());
 		}
 	}
 
@@ -53,24 +64,23 @@ public class BaseStatementSetup {
 	private static class BaseStatementImportDto {
 
 		private List<BaseStatementDto> baseStatements = new ArrayList<>();
-		private List<BaseStatementFunctionDto> baseStatementFunctions = new ArrayList<>();
+		private List<BaseStatementFunctionDto> functions = new ArrayList<>();
 
 		public List<BaseStatementDto> getBaseStatements() {
 			return baseStatements;
 		}
 
-		public void setBaseStatements(
-				List<BaseStatementDto> baseStatements) {
+		public void setBaseStatements(List<BaseStatementDto> baseStatements) {
 			this.baseStatements = baseStatements;
 		}
 
-		public List<BaseStatementFunctionDto> getBaseStatementFunctions() {
-			return baseStatementFunctions;
+		public List<BaseStatementFunctionDto> getFunctions() {
+			return functions;
 		}
 
-		public void setBaseStatementFunctions(
-				List<BaseStatementFunctionDto> baseStatementFunctions) {
-			this.baseStatementFunctions = baseStatementFunctions;
+		public void setFunctions(
+				List<BaseStatementFunctionDto> functions) {
+			this.functions = functions;
 		}
 	}
 

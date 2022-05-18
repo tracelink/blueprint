@@ -65,12 +65,12 @@
             <form class="form-inline" th:action="${'/usermgmt/' + user.getId() + '/setrole'}"
                   method="post">
               <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-              <select class="selectpicker mr-2" name="roleId" multiple>
+              <select class="selectpicker mr-2" name="roleIds" multiple>
                 <option th:each="role:${roles}" th:value="${role.getId()}"
                         th:text="${role.getRoleName() + ' - ' + role.getDescription()}"
                         th:selected="${#lists.contains(#strings.listSplit(user.getRolesString(), ', '), role.getRoleName())}">
               </select>
-              <button class='btn btn-warning' type='submit'>Set Role</button>
+              <button class='btn btn-warning' type='submit'>Set Roles</button>
             </form>
           </div>
           <div class="col-lg-4">

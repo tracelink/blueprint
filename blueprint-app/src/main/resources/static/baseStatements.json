@@ -10,14 +10,14 @@
       "function": "stack_has_entry_with_app_in",
       "arguments": [
         {
-          "constant": false,
+          "parameter": "apps",
           "description": "The set of apps to allow",
           "type": "stringArray",
-          "uniqueItems": true,
-          "orderedItems": false
+          "arrayUnique": true,
+          "arrayUnordered": true
         },
         {
-          "constant": false,
+          "parameter": "stack_entry_idx",
           "description": "The call stack index. Note that negative index values are counted from the end of the stack, e.g. the last item in the stack would be at index -1",
           "type": "integer"
         }
@@ -33,15 +33,50 @@
       "function": "last_stack_entry_has_app_in",
       "arguments": [
         {
-          "constant": false,
+          "parameter": "apps",
           "description": "The set of apps to allow",
           "type": "stringArray",
-          "uniqueItems": true,
-          "orderedItems": false,
+          "arrayUnique": true,
+          "arrayUnordered": true,
           "enumValues": [
-            "tde",
+            "agile-process-teams",
+            "analytics",
+            "app-health-monitor",
+            "application-administration",
+            "application-manager",
+            "audit-manager",
+            "authorization-manager",
+            "bahrain-compliance",
+            "brazil-compliance",
+            "common-traceability-application",
+            "company-administration",
+            "customer-transform-catalog-manager",
+            "datamesh-pipeline-manager",
             "environment-manager",
-            "user-admin"
+            "eventgateway",
+            "experience-manager",
+            "file-import-export-manager",
+            "jumpbox-async",
+            "masterdata-manager",
+            "message-center",
+            "message-hub",
+            "message-service-manager",
+            "metadata-manager",
+            "mirror",
+            "network-administration-proxy",
+            "network-administration",
+            "network-operations",
+            "opus-diagnostics",
+            "product-information-manager",
+            "resource-manager",
+            "secondary-metadata-manager",
+            "secondary-transform-catalog-manager",
+            "solution-builder",
+            "solution-catalog-manager",
+            "tde",
+            "transformation-runtime",
+            "user-admin",
+            "workflow-manager"
           ]
         }
       ]
@@ -56,11 +91,11 @@
       "function": "stack_has_app_in",
       "arguments": [
         {
-          "constant": false,
+          "parameter": "apps",
           "description": "The set of apps to allow",
           "type": "stringArray",
-          "uniqueItems": true,
-          "orderedItems": false
+          "arrayUnique": true,
+          "arrayUnordered": true
         }
       ]
     },
@@ -74,11 +109,11 @@
       "function": "origin_has_app_in",
       "arguments": [
         {
-          "constant": false,
+          "parameter": "apps",
           "description": "The set of apps to allow",
           "type": "stringArray",
-          "uniqueItems": true,
-          "orderedItems": false
+          "arrayUnique": true,
+          "arrayUnordered": true
         }
       ]
     },
@@ -92,11 +127,11 @@
       "function": "origin_has_module_in",
       "arguments": [
         {
-          "constant": false,
+          "parameter": "modules",
           "description": "The set of modules to allow",
           "type": "stringArray",
-          "uniqueItems": true,
-          "orderedItems": false
+          "arrayUnique": true,
+          "arrayUnordered": true
         }
       ]
     },
@@ -110,11 +145,11 @@
       "function": "last_stack_entry_has_method_in",
       "arguments": [
         {
-          "constant": false,
+          "parameter": "methods",
           "description": "The set of handlers to allow",
           "type": "stringArray",
-          "uniqueItems": true,
-          "orderedItems": false
+          "arrayUnique": true,
+          "arrayUnordered": true
         }
       ]
     },
@@ -128,11 +163,11 @@
       "function": "action_has_method_in",
       "arguments": [
         {
-          "constant": false,
+          "parameter": "method_names",
           "description": "The set of handlers to allow",
           "type": "stringArray",
-          "uniqueItems": true,
-          "orderedItems": false
+          "arrayUnique": true,
+          "arrayUnordered": true
         }
       ]
     },
@@ -146,11 +181,11 @@
       "function": "last_stack_entry_has_env_in",
       "arguments": [
         {
-          "constant": false,
+          "parameter": "envs",
           "description": "The set of environments to allow",
           "type": "stringArray",
-          "uniqueItems": true,
-          "orderedItems": false
+          "arrayUnique": true,
+          "arrayUnordered": true
         }
       ]
     },
@@ -161,38 +196,22 @@
       "policyTypes": [
         "Enterprise",
         "Multienterprise",
+        "System",
         "User"
       ],
       "function": "user_is_active"
     },
     {
-      "name": "Allow Authenticated Users",
-      "description": "Allow calls from authenticated users",
+      "name": "Allow Prometheus Users",
+      "description": "Allow calls from users that belong to the Prometheus company",
       "negationAllowed": false,
       "policyTypes": [
         "Enterprise",
         "Multienterprise",
-        "User"
-      ],
-      "function": "user_is_authenticated"
-    },
-    {
-      "name": "Allow Company Users",
-      "description": "Allow calls from users that belong to a company",
-      "negationAllowed": false,
-      "policyTypes": [
+        "User",
         "System"
       ],
-      "function": "user_has_company_membership",
-      "arguments": [
-        {
-          "constant": false,
-          "description": "The company ID to allow",
-          "type": "string",
-          "uniqueItems": true,
-          "orderedItems": false
-        }
-      ]
+      "function": "user_has_prometheus_membership"
     },
     {
       "name": "Allow Users With Membership Permission",
@@ -206,6 +225,28 @@
       "function": "user_has_membership_permission"
     },
     {
+      "name": "Allow Users With Application Membership Permission",
+      "description": "Allow calls from users with the handler membership permission in the appropriate application",
+      "negationAllowed": false,
+      "policyTypes": [
+        "Enterprise",
+        "Multienterprise",
+        "User"
+      ],
+      "function": "user_has_application_membership_permission"
+    },
+    {
+      "name": "Allow Users With Process Network Membership Permission",
+      "description": "Allow calls from users with the handler membership permission in the appropriate process network",
+      "negationAllowed": false,
+      "policyTypes": [
+        "Enterprise",
+        "Multienterprise",
+        "User"
+      ],
+      "function": "user_has_process_network_membership_permission"
+    },
+    {
       "name": "Allow Call Stack Length",
       "description": "Allow calls where the call stack has a specific length",
       "negationAllowed": false,
@@ -215,11 +256,11 @@
       "function": "stack_has_length_in",
       "arguments": [
         {
-          "constant": false,
+          "parameter": "lengths",
           "description": "The set of allowed call stack lengths",
           "type": "integerArray",
-          "uniqueItems": true,
-          "orderedItems": false
+          "arrayUnique": true,
+          "arrayUnordered": true
         }
       ]
     },
@@ -251,7 +292,7 @@
       "function": "last_stack_entry_has_same_env"
     }
   ],
-  "baseStatementFunctions": [
+  "functions": [
     {
       "name": "stack_has_entry_with_component_in",
       "description": "Determines whether the stack component at the given stack entry has one of the given values. The stack_entry_idx is treated as a modulo value for the length of the stack. So -1 is the last entry in the stack, -2 is the second-to-last entry, and so on. This avoids index out of bounds errors and simplifies calling the function. Each stack entry has several components, separated by \"|\". The stack_component_idx value tells which one of these components should be compared against the given values. 0: environment, 1: application, 2: module(?), 3: method/handler, 4: version(?)",
@@ -263,7 +304,7 @@
         "stack_entry_index",
         "stack_component_index"
       ],
-      "expression": "stack_length := count(input.authorization.stack)\n    modulo_stack_entry_idx := ((stack_entry_idx % stack_length) + stack_length) % stack_length\n    stack_entry := input.authorization.stack[modulo_stack_entry_idx]\n    stack_components := split(stack_entry, \"|\")\n    0 <= stack_component_idx <= 4\n    values[_] == stack_components[stack_component_idx]"
+      "expression": "stack_length := count(input.authorization.stack)\n    modulo_stack_entry_idx := ((stack_entry_idx % stack_length) + stack_length) % stack_length\n    stack_entry := input.authorization.stack[modulo_stack_entry_idx]\n    stack_components := split(stack_entry, \"|\")\n    0 <= stack_component_idx < count(stack_components)\n    values[_] == stack_components[stack_component_idx]"
     },
     {
       "name": "last_stack_entry_has_env_in",
@@ -361,19 +402,10 @@
       "policyTypes": [
         "Enterprise",
         "Multienterprise",
-        "User"
+        "User",
+        "System"
       ],
       "expression": "input.authorization.principal.User.active == true"
-    },
-    {
-      "name": "user_is_authenticated",
-      "description": "Determines whether the user is authenticated",
-      "policyTypes": [
-        "Enterprise",
-        "Multienterprise",
-        "User"
-      ],
-      "expression": "user := input.authorization.principal.User\n    user.active == true\n    user.id != null\n    user.id != \"\"\n    user.email != null\n    user.email != \"\""
     },
     {
       "name": "user_is_empty",
@@ -392,15 +424,15 @@
       "expression": "input.authorization.principal == {\n        \"User\": {\n            \"email\": \"unknown\",\n            \"active\": true\n        },\n        \"CompanyMemberships\": [],\n        \"ApplicationMemberships\": [],\n        \"ProcessNetworkMemberships\": []\n    }"
     },
     {
-      "name": "user_has_company_membership",
-      "description": "Determines whether the user's company memberships contains the given company ID",
+      "name": "user_has_prometheus_membership",
+      "description": "Determines whether the user's company memberships contains the Prometheus company ID",
       "policyTypes": [
+        "Enterprise",
+        "Multienterprise",
+        "User",
         "System"
       ],
-      "parameters": [
-        "company_id"
-      ],
-      "expression": "input.authorization.principal.CompanyMemberships[_].networkNodeId == company_id"
+      "expression": "input.authorization.principal.CompanyMemberships[_].networkNodeId == \"00000000-0000-0000-0000-000000000000\""
     },
     {
       "name": "user_has_membership_permission",
@@ -410,7 +442,27 @@
         "Multienterprise",
         "User"
       ],
-      "expression": "event_components := split(input.authorization.action.currentMethod, \":\")\n    count(event_components) == 3\n    permission := concat(\":\", [event_components[0], event_components[1]])\n    pn_memberships := {membership | membership := input.authorization.principal.ProcessNetworkMemberships[_];\n                              membership.processNetworkId == input.authorization.environment.processNetworkId}\n    app_memberships := {membership | membership := input.authorization.principal.ApplicationMemberships[_];\n                              membership.applicationName == input.authorization.environment.applicationName\n                              membership.applicationOwnerNetworkNodeId == input.authorization.environment.ownerId}\n    memberships := array.concat(pn_memberships, app_memberships)\n    memberships[_].roles[_].permissions[_].permissionName == permission"
+      "expression": "event_components := split(input.authorization.action.currentMethod, \":\")\n    count(event_components) > 2\n    permission := concat(\":\", [event_components[0], event_components[1]])\n    pn_memberships := {membership | membership := input.authorization.principal.ProcessNetworkMemberships[_];\n                              membership.processNetworkId == input.authorization.environment.processNetworkId}\n    app_memberships := {membership | membership := input.authorization.principal.ApplicationMemberships[_];\n                              membership.applicationName == input.authorization.environment.applicationName\n                              membership.applicationOwnerNetworkNodeId == input.authorization.environment.ownerId}\n    memberships := array.concat(pn_memberships, app_memberships)\n    memberships[_].roles[_].permissions[_].permissionName == permission"
+    },
+    {
+      "name": "user_has_application_membership_permission",
+      "description": "Determines whether an event's \"app:event\" permission is found in the user's memberships for this application",
+      "policyTypes": [
+        "Enterprise",
+        "Multienterprise",
+        "User"
+      ],
+      "expression": "event_components := split(input.authorization.action.currentMethod, \":\")\n    count(event_components) > 2\n    permission := concat(\":\", [event_components[0], event_components[1]])\n    app_memberships := {membership | membership := input.authorization.principal.ApplicationMemberships[_];\n                              membership.applicationName == input.authorization.environment.applicationName\n                              membership.applicationOwnerNetworkNodeId == input.authorization.environment.ownerId}\n    app_memberships[_].roles[_].permissions[_].permissionName == permission"
+    },
+    {
+      "name": "user_has_process_network_membership_permission",
+      "description": "Determines whether an event's \"app:event\" permission is found in the user's memberships for this process network",
+      "policyTypes": [
+        "Enterprise",
+        "Multienterprise",
+        "User"
+      ],
+      "expression": "event_components := split(input.authorization.action.currentMethod, \":\")\n    count(event_components) > 2\n    permission := concat(\":\", [event_components[0], event_components[1]])\n    pn_memberships := {membership | membership := input.authorization.principal.ProcessNetworkMemberships[_];\n                              membership.processNetworkId == input.authorization.environment.processNetworkId}\n    pn_memberships[_].roles[_].permissions[_].permissionName == permission"
     },
     {
       "name": "origin_has_app_in",
@@ -419,9 +471,12 @@
         "System"
       ],
       "parameters": [
-        "app_names"
+        "apps"
       ],
-      "expression": "app_names[_] == input.authorization.origin.appName"
+      "expression": "stack_has_entry_with_component_in(apps, 0, 1)",
+      "dependencies": [
+        "stack_has_entry_with_component_in"
+      ]
     },
     {
       "name": "origin_has_module_in",
@@ -430,9 +485,12 @@
         "System"
       ],
       "parameters": [
-        "module_names"
+        "modules"
       ],
-      "expression": "module_names[_] == split(input.authorization.origin.methodName, \":\")[0]"
+      "expression": "stack_has_entry_with_component_in(modules, 0, 2)",
+      "dependencies": [
+        "stack_has_entry_with_component_in"
+      ]
     },
     {
       "name": "action_has_method_in",

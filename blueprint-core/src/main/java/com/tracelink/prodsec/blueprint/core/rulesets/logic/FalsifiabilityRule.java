@@ -1,19 +1,17 @@
 package com.tracelink.prodsec.blueprint.core.rulesets.logic;
 
-import java.util.LinkedHashMap;
-import java.util.Map.Entry;
-
 import com.tracelink.prodsec.blueprint.core.policy.ConfiguredStatement;
 import com.tracelink.prodsec.blueprint.core.policy.Policy;
 import com.tracelink.prodsec.blueprint.core.policy.PolicyClause;
-import com.tracelink.prodsec.blueprint.core.rules.AbstractPolicyRule;
-import com.tracelink.prodsec.blueprint.core.rules.PolicyReport;
-import com.tracelink.prodsec.blueprint.core.rules.RuleSeverity;
+import com.tracelink.prodsec.blueprint.core.report.PolicyBuilderReport;
+import com.tracelink.prodsec.blueprint.core.report.RuleSeverity;
+import com.tracelink.prodsec.blueprint.core.visitor.AbstractPolicyRule;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
 
 /**
  * Detects policies that are configured so that any boolean input to its statements always results
- * in
- * an evaluation of true.
+ * in an evaluation of true.
  * <p>
  * This protects policies against being mistakenly created to allow all.
  * <p>
@@ -43,7 +41,7 @@ public class FalsifiabilityRule extends AbstractPolicyRule {
 	/*
 	 * An assignment maps the integer hash code of a configured statement to its truth-table equivalent
 	 */
-	private LinkedHashMap<Integer, Boolean> assignments = new LinkedHashMap<>();
+	private final LinkedHashMap<Integer, Boolean> assignments = new LinkedHashMap<>();
 
 	public FalsifiabilityRule() {
 		super("Falsifiability Rule");
@@ -51,21 +49,21 @@ public class FalsifiabilityRule extends AbstractPolicyRule {
 
 	@Override
 	public RuleSeverity getSeverity() {
-		return RuleSeverity.HIGH;
+		return RuleSeverity.ERROR;
 	}
 
 	@Override
-	public PolicyReport visit(Policy node, PolicyReport report) {
+	public PolicyBuilderReport visit(Policy node, PolicyBuilderReport report) {
 		super.visit(node, report);
 		if (isFalsifiable(node)) {
 			report.addViolation(this, node,
-				"This policy is unsatisfiable because at least one clause can be true for every given input");
+					"This policy always evaluates to true because at least one clause evaluates to true for every given input");
 		}
 		return report;
 	}
 
 	@Override
-	public PolicyReport visit(PolicyClause node, PolicyReport report) {
+	public PolicyBuilderReport visit(PolicyClause node, PolicyBuilderReport report) {
 		for (ConfiguredStatement stmt : node.getStatements()) {
 			int code = stmt.generateHashCodeWithoutNegation();
 			assignments.putIfAbsent(code, false);

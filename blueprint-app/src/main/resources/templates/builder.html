@@ -127,6 +127,13 @@
         </div>
       </div>
       <div th:if="${policy != null}" class="card-body py-0">
+        <div th:unless="${updatedBaseStatements == null || updatedBaseStatements.isEmpty()}"
+             class="alert alert-info alert-dismissible fade show" role="alert">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+              aria-hidden="true">×</span></button>
+          <div
+              th:text="${'This policy has outdated base statements. Consider updating to the latest versions: ' + #strings.listJoin(updatedBaseStatements, ', ')}"></div>
+        </div>
         <div th:if="${#fields.hasErrors('${policy.clauses}')}"
              class="alert alert-danger alert-dismissible fade show mb-0" role="alert">
           <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -152,9 +159,9 @@
                         <div>
                           <select class="selectpicker" data-width="auto"
                                   data-style="rounded border" data-live-search="true">
-                            <option th:each="baseStatement : ${baseStatements.values()}"
-                                    th:data-content="${baseStatement.name}"
-                                    th:value="${baseStatement.name}"></option>
+                            <option th:each="entry : ${baseStatements}"
+                                    th:data-content="${entry.value.name}"
+                                    th:value="${entry.key}"></option>
                           </select>
                           <button
                               class="btn btn-small btn-outline-success px-1 py-1 add-statement">
@@ -166,13 +173,15 @@
                     <div class="card-footer">
                       <ul class="list-group statements-list">
                         <li th:each="statement, sStat : ${clause.statements}"
-                            th:with="baseStatement=${baseStatements.get(statement.baseStatementName)}"
+                            th:with="baseStatement=${allBaseStatements.get(statement.baseStatementName)}"
                             class="list-group-item rounded-0 configured-statement">
                           <div class="d-flex justify-content-between">
                             <div class="row">
                               <div class="col-auto align-self-center">
                                 <strong class="font-weight-bold my-2"
                                         th:text="${baseStatement.name}"></strong>
+                                <small
+                                    th:text="'(Version ' + ${baseStatement.version} + ')'"></small>
                               </div>
                               <div class="col align-self-center">
                                 <div th:if="${baseStatement.negationAllowed}"
@@ -202,7 +211,7 @@
                                    form="export-form"
                                    th:name="|clauses[${cStat.index}].statements[${sStat.index}].negated|"/>
                           </div>
-                          <input type="hidden" th:value="${baseStatement.name}"
+                          <input type="hidden" th:value="${statement.baseStatementName}"
                                  class="indexed-element" form="export-form"
                                  th:name="|clauses[${cStat.index}].statements[${sStat.index}].baseStatementName|"/>
                           <p th:if="${!baseStatement.arguments.isEmpty()}"

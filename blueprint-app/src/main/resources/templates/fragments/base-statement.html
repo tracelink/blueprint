@@ -1,0 +1,149 @@
+<div th:fragment="baseStatement (baseStatement, editable)" class="card card-small mb-4">
+  <div class="card-header border-bottom p-2">
+    <div class="d-flex justify-content-between">
+      <h6 class="card-title align-self-center mb-0">Base Statement Details <span
+          th:if="${baseStatement.state?.name.equals('Deprecated')}"
+          class="badge mr-1 badge-outline-warning m-0 align-self-center">Deprecated</span></h6>
+      <div th:if="${editable}" class="btn-toolbar">
+        <a th:if="${baseStatement.state?.name.equals('Draft')}"
+           th:href="${baseStatementId != null} ? '/base-statements/' + ${baseStatementId} : '/base-statements'">
+          <button class="btn btn-light px-2 mr-1">Cancel</button>
+        </a>
+        <form th:if="${baseStatement.state?.name.equals('Draft')}" class="form-inline"
+              id="save-form" method="POST"
+              th:action="${baseStatementId != null} ? '/base-statements/' + ${baseStatementId} + '/save' : '/base-statements/save'">
+          <button type="submit" class="btn btn-info px-2 mr-1">Save</button>
+        </form>
+      </div>
+      <div th:if="${!editable}" class="btn-toolbar">
+        <a th:if="${baseStatement.state?.name.equals('Draft')}"
+           th:href="'/base-statements/' + ${baseStatementId} + '/edit'">
+          <button class="btn btn-secondary px-2 mr-1">Edit</button>
+        </a>
+        <form th:if="${baseStatement.state?.name.equals('Released') && nextVersionId == null}"
+              class="form-inline" method="POST"
+              th:action="'/base-statements/' + ${baseStatementId} + '/create-revision'">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <button type="submit" class="btn btn-primary px-2 mr-1">Create revision</button>
+        </form>
+        <form th:if="${baseStatement.state?.name.equals('Draft')}" class="form-inline" method="POST"
+              th:action="'/base-statements/' + ${baseStatementId} + '/state/released'">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <button type="submit" class="btn btn-warning px-2 mr-1">Release</button>
+        </form>
+        <form th:if="${baseStatement.state?.name.equals('Released')}" class="form-inline"
+              method="POST"
+              th:action="'/base-statements/' + ${baseStatementId} + '/state/deprecated'">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <button type="submit" class="btn btn-warning px-2 mr-1">Deprecate</button>
+        </form>
+        <form th:if="${baseStatement.author.equals(#authentication.getPrincipal().getUsername())}"
+              class="form-inline" method="POST"
+              th:action="'/base-statements/' + ${baseStatementId} + '/delete'">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <button type="submit" class="btn btn-danger px-2">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <div th:if="${updatedFunction != null}"
+         class="alert alert-info alert-dismissible fade show" role="alert">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+          aria-hidden="true">×</span></button>
+      <div
+          th:text="'This base statement uses an outdated function. Consider updating to the latest version: ' + ${updatedFunction}">
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-6">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" form="save-form" autocomplete="off"
+               th:class="${baseStatementId != null} ? 'form-control-plaintext' : 'form-control'"
+               placeholder="Base Statement Name" th:value="${baseStatement.name}"
+               th:readonly="${baseStatementId != null}">
+      </div>
+      <div class="col-2">
+        <label for="version">Version</label>
+        <input type="text" class="form-control-plaintext" id="version" name="version"
+               form="save-form" th:value="${baseStatement.version}" readonly>
+      </div>
+      <div class="col-2">
+        <label for="state">State</label>
+        <input type="text" class="form-control-plaintext" id="state" name="state"
+               form="save-form" th:value="${baseStatement.state?.name}" readonly>
+      </div>
+      <div class="col-2">
+        <label for="author">Author</label>
+        <input type="text" class="form-control-plaintext" id="author" name="author"
+               form="save-form" th:value="${baseStatement.author}" readonly>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col">
+        <label for="description">Description</label>
+        <textarea class="form-control" id="description" name="description" form="save-form"
+                  placeholder="Base Statement Description" th:text="${baseStatement.description}"
+                  rows="3" th:disabled="${!editable}"></textarea>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col">
+        <label for="policyTypes">Policy Types</label>
+        <fieldset th:disabled="${!editable}" id="policyTypes">
+          <div th:each="policyType : ${policyTypes}" class="custom-control custom-checkbox">
+            <input type="checkbox" class="custom-control-input" name="policyTypes" form="save-form"
+                   th:value="${policyType}" th:id="'policyType-' + ${policyType}"
+                   th:checked="${#lists.contains(baseStatement.policyTypes, policyType)}">
+            <label class="custom-control-label" th:for="'policyType-' + ${policyType}"
+                   th:text="${policyType}"></label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="col">
+        <label>Negation Allowed</label>
+        <div class="custom-control custom-toggle mb-2">
+          <input type="checkbox" class="custom-control-input" form="save-form"
+                 id="negationAllowed" name="negationAllowed"
+                 th:checked="${baseStatement.negationAllowed}" th:disabled="${!editable}">
+          <label class="custom-control-label" for="negationAllowed"></label>
+        </div>
+      </div>
+      <div class="col">
+        <label class="d-block" for="function">Function</label>
+        <select class="custom-select" id="function" name="function" form="save-form"
+                data-width="auto" th:disabled="${!editable}">
+          <option th:if="${baseStatement.function == null}" disabled selected value>
+            No function selected
+          </option>
+          <option
+              th:unless="${baseStatement.function == null || #lists.contains(functions, baseStatement.function)}"
+              th:text="${baseStatement.function}" th:value="${baseStatement.function}"></option>
+          <option th:each="function : ${functions}" th:value="${function}" th:text="${function}"
+                  th:selected="${baseStatement.function?.equals(function)}"></option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <label>Arguments</label>
+        <div
+            th:replace="fragments/arguments :: arguments(${baseStatement.arguments}, ${editable})"></div>
+      </div>
+    </div>
+  </div>
+  <div th:if="${baseStatementId != null && (prevVersionId != null || nextVersionId != null)}"
+       class="card-footer p-2">
+    <a th:if="${prevVersionId != null}" th:href="'/base-statements/' + ${prevVersionId}"
+       th:target="${editable} ? '_blank' : ''">
+      <button class="btn btn-light float-left">
+        <i class="material-icons" th:text="${editable} ? 'launch' : 'west'"></i> Previous Version
+      </button>
+    </a>
+    <a th:if="${nextVersionId != null}" th:href="'/base-statements/' + ${nextVersionId}">
+      <button class="btn btn-light float-right">
+        Next Version <i class="material-icons">east</i>
+      </button>
+    </a>
+  </div>
+</div>

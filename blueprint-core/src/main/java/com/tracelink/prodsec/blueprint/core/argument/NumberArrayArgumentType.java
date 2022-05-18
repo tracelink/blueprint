@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 public class NumberArrayArgumentType extends ArgumentType {
 
 	NumberArrayArgumentType() {
-		super("numberArray", "number array", true);
+		super("numberArray", "Number Array", true);
 	}
 
 	/**
@@ -49,18 +49,29 @@ public class NumberArrayArgumentType extends ArgumentType {
 				return null;
 			}
 			return "[" + numbers.stream().map(String::valueOf).collect(Collectors.joining(", "))
-				+ "]";
+					+ "]";
 		} catch (NumberFormatException e) {
 			return null;
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public List<Float> getArrayItems(String configuredArgument) {
 		if (configuredArgument == null) {
 			return null;
 		}
 		return Arrays.stream(configuredArgument.split(",")).map(String::trim).map(Float::parseFloat)
-			.collect(Collectors.toList());
+				.collect(Collectors.toList());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ArgumentType getBaseType() {
+		return new NumberArgumentType();
 	}
 }

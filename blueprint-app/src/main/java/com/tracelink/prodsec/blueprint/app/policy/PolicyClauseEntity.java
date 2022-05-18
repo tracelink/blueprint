@@ -15,6 +15,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.tracelink.prodsec.blueprint.core.policy.PolicyClause;
+
 /**
  * Entity for a single policy clause in a policy.
  *
@@ -42,6 +44,18 @@ public class PolicyClauseEntity {
 			this.statements.clear();
 			this.statements.addAll(statements);
 		}
+	}
+
+	/**
+	 * Converts this entity object to a core object for validation and export.
+	 *
+	 * @return the core representation of this entity
+	 */
+	public PolicyClause toCore() {
+		PolicyClause clause = new PolicyClause();
+		clause.setStatements(statements.stream().map(ConfiguredStatementEntity::toCore)
+				.collect(Collectors.toUnmodifiableList()));
+		return clause;
 	}
 
 	/**

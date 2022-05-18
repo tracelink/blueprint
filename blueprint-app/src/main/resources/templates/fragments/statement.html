@@ -1,22 +1,29 @@
 <li class="list-group-item rounded-0 configured-statement">
   <div class="d-flex justify-content-between">
-    <strong class="font-weight-bold my-2" th:text="${baseStatement.name}"></strong>
+    <div class="row">
+      <div class="col-auto align-self-center">
+        <strong class="font-weight-bold my-2" th:text="${baseStatement.name}"></strong>
+        <small th:text="'(Version ' + ${baseStatement.version} + ')'"></small>
+      </div>
+      <div class="col align-self-center">
+        <div th:if="${baseStatement.negationAllowed}"
+             class="custom-control custom-toggle custom-toggle-sm align-self-center mb-1 negated-toggle">
+          <input type="checkbox" class="custom-control-input indexed-element"
+                 th:id="'negate-' + ${clauseIndex} + '-' + ${statementIndex}" form="export-form"
+                 th:name="|clauses[${clauseIndex}].statements[${statementIndex}].negated|">
+          <label class="custom-control-label"
+                 th:for="'negate-' + ${clauseIndex} + '-' + ${statementIndex}">
+            Negate
+            <a href="#" data-toggle="tooltip" th:title="#{negation}">
+              <i class="material-icons">help_outline</i>
+            </a>
+          </label>
+        </div>
+      </div>
+    </div>
     <button class="btn btn-danger px-1 py-1 delete-statement">
       <i class="material-icons md-24">delete</i>
     </button>
-  </div>
-  <div th:if="${baseStatement.negationAllowed}"
-       class="custom-control custom-toggle custom-toggle-sm align-self-center mb-1 negated-toggle">
-    <input type="checkbox" class="custom-control-input indexed-element"
-           th:id="'negate-' + ${clauseIndex} + '-' + ${statementIndex}" form="export-form"
-           th:name="|clauses[${clauseIndex}].statements[${statementIndex}].negated|">
-    <label class="custom-control-label"
-           th:for="'negate-' + ${clauseIndex} + '-' + ${statementIndex}">
-      Negate
-      <a href="#" data-toggle="tooltip" th:title="#{negation}">
-        <i class="material-icons">help_outline</i>
-      </a>
-    </label>
   </div>
   <div th:if="${!baseStatement.negationAllowed}">
     <input type="hidden" value="false" class="indexed-element" form="export-form"
@@ -30,7 +37,8 @@
     <div class="col-lg-6" th:each="argument, stat : ${baseStatement.arguments}">
       <div class="form-group">
         <small class="form-text text-muted py-2" th:text="${argument.description}"></small>
-        <select th:if="${argument.enumValues != null}" class="selectpicker indexed-element"
+        <select th:if="${argument.enumValues != null && !argument.enumValues.isEmpty()}"
+                class="selectpicker indexed-element"
                 data-width="auto" data-style="rounded border" data-live-search="true"
                 th:multiple="${argument.type.name.endsWith('Array')}" form="export-form"
                 th:name="|clauses[${clauseIndex}].statements[${statementIndex}].argumentValues[${stat.index}]|">

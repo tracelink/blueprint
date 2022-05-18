@@ -3,8 +3,6 @@ package com.tracelink.prodsec.blueprint.core.argument;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.tracelink.prodsec.blueprint.core.argument.NumberArrayArgumentType;
-
 public class NumberArrayArgumentTypeTest {
 
 	@Test
@@ -20,6 +18,11 @@ public class NumberArrayArgumentTypeTest {
 		Assert.assertNull(new NumberArrayArgumentType().generateRego(null));
 		Assert.assertNull(new NumberArrayArgumentType().generateRego("1.2,bar"));
 		Assert.assertEquals("[12.0, 1.4]", new NumberArrayArgumentType().generateRego(" 12, 1.4 "));
+	}
+
+	@Test
+	public void testGetBaseType() {
+		Assert.assertEquals("number", new NumberArrayArgumentType().getBaseType().getName());
 	}
 
 }

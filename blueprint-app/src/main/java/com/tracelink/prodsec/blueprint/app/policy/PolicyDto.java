@@ -16,17 +16,27 @@ import javax.validation.constraints.NotNull;
  */
 public class PolicyDto {
 
-	@NotEmpty(message = "A policy must have at least one clause")
-	private List<@NotNull(message = "Policy clauses cannot be null") @Valid PolicyClauseDto> clauses = new ArrayList<>();
+	private String name;
+	private String author;
 	@NotBlank(message = "A policy must have a type")
 	private String policyType;
+	@NotEmpty(message = "A policy must have at least one clause")
+	private List<@NotNull(message = "Policy clauses cannot be null") @Valid PolicyClauseDto> clauses = new ArrayList<>();
 
-	public List<PolicyClauseDto> getClauses() {
-		return clauses;
+	public String getName() {
+		return name;
 	}
 
-	public void setClauses(List<PolicyClauseDto> clauses) {
-		this.clauses = clauses;
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getAuthor() {
+		return author;
+	}
+
+	public void setAuthor(String author) {
+		this.author = author;
 	}
 
 	public String getPolicyType() {
@@ -35,5 +45,13 @@ public class PolicyDto {
 
 	public void setPolicyType(String policyType) {
 		this.policyType = policyType;
+	}
+
+	public List<PolicyClauseDto> getClauses() {
+		return clauses;
+	}
+
+	public void setClauses(List<PolicyClauseDto> clauses) {
+		this.clauses = clauses;
 	}
 }

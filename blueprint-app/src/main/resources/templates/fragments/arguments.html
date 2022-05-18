@@ -1,0 +1,80 @@
+<ul th:fragment="arguments (arguments, editable)" class="list-group" id="arguments">
+  <li th:if="${arguments.isEmpty()}" class="list-group-item disabled">
+    <p class="card-text mb-0">No arguments required</p>
+  </li>
+  <li th:each="argument, aStat : ${arguments}"
+      class="list-group-item">
+    <div class="row mb-2">
+      <div class="col-auto">
+        <label th:for="'arguments[' + ${aStat.index} + '].parameter'">Function Parameter</label>
+        <input type="text" class="form-control-plaintext"
+               th:id="'arguments[' + ${aStat.index} + '].parameter'"
+               th:name="'arguments[' + ${aStat.index} + '].parameter'" form="save-form"
+               th:value="${arguments.get(aStat.index).parameter}" readonly>
+      </div>
+      <div class="col">
+        <label th:for="'arguments[' + ${aStat.index} + '].description'">Description</label>
+        <textarea class="form-control"
+                  th:id="'arguments[' + ${aStat.index} + '].description'"
+                  th:name="'arguments[' + ${aStat.index} + '].description'" form="save-form"
+                  th:text="${arguments.get(aStat.index).description}"
+                  placeholder="Argument Description"
+                  th:disabled="${!editable}" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-6">
+        <div class="row mb-2">
+          <div class="col">
+            <label th:for="'arguments[' + ${aStat.index} + '].type'">Argument Type</label>
+            <select class="custom-select" th:id="'arguments[' + ${aStat.index} + '].type'"
+                    th:name="'arguments[' + ${aStat.index} + '].type'" form="save-form"
+                    th:disabled="${!editable}">
+              <option th:each="argumentType : ${argumentTypes}"
+                      th:value="${argumentType.name}"
+                      th:text="${argumentType.displayName}"
+                      th:selected="${arguments.get(aStat.index).type?.equals(argumentType)}"></option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label>Unordered Values</label>
+            <div class="custom-control custom-toggle mb-2">
+              <input type="checkbox" class="custom-control-input" form="save-form"
+                     th:id="'arguments[' + ${aStat.index} + '].arrayUnordered'"
+                     th:name="'arguments[' + ${aStat.index} + '].arrayUnordered'"
+                     th:checked="${arguments.get(aStat.index).arrayUnordered}"
+                     th:disabled="${!editable}">
+              <label class="custom-control-label"
+                     th:for="'arguments[' + ${aStat.index} + '].arrayUnordered'"><small>(Array types
+                only)</small></label>
+            </div>
+          </div>
+          <div class="col">
+            <label>Prevent Duplicate Values</label>
+            <div class="custom-control custom-toggle mb-2">
+              <input type="checkbox" class="custom-control-input" form="save-form"
+                     th:id="'arguments[' + ${aStat.index} + '].arrayUnique'"
+                     th:name="'arguments[' + ${aStat.index} + '].arrayUnique'"
+                     th:checked="${arguments.get(aStat.index).arrayUnique}"
+                     th:disabled="${!editable}">
+              <label class="custom-control-label"
+                     th:for="'arguments[' + ${aStat.index} + '].arrayUnique'"><small>(Array types
+                only)</small></label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6">
+        <label th:for="'arguments[' + ${aStat.index} + '].enumValues'">Enumerated Values</label>
+        <textarea class="form-control"
+                  th:id="'arguments[' + ${aStat.index} + '].enumValues'"
+                  th:name="'arguments[' + ${aStat.index} + '].enumValues'" form="save-form"
+                  th:text="${#strings.listJoin(arguments.get(aStat.index).enumValues, ', ')}"
+                  th:placeholder="${editable} ? 'Comma-separated list of values for users to select from' : 'No enumerated values defined'"
+                  th:disabled="${!editable}" rows="1"></textarea>
+      </div>
+    </div>
+  </li>
+</ul>

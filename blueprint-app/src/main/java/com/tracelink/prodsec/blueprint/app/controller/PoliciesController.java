@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
 
+import com.tracelink.prodsec.blueprint.app.exception.PolicyElementNotFoundException;
 import com.tracelink.prodsec.blueprint.app.exception.PolicyException;
 import com.tracelink.prodsec.blueprint.app.mvc.BlueprintModelAndView;
 import com.tracelink.prodsec.blueprint.app.policy.PolicyEntity;
@@ -39,7 +41,8 @@ public class PoliciesController {
 	}
 
 	@GetMapping(value = {"", "/{policyId}"})
-	public ModelAndView getPolicies(@PathVariable Optional<Long> policyId, Principal principal) {
+	public ModelAndView getPolicies(@PathVariable Optional<Long> policyId, Principal principal)
+			throws PolicyElementNotFoundException {
 		BlueprintModelAndView mav = new BlueprintModelAndView("policies");
 		mav.addScriptReference("/scripts/policies.js");
 		Map<String, Long> policies = policyService.getPolicies();
@@ -65,14 +68,16 @@ public class PoliciesController {
 			mav.addObject("policyId", policy.getId());
 			mav.addObject("delete", policy.getAuthor().equals(principal.getName()));
 			mav.addObject("baseStatements", baseStatementService
-					.getBaseStatementsForPolicyType(policy.getPolicyType().getName()));
+					.getAllBaseStatements());
+			mav.addObject("updatedBaseStatements",
+					policyService.getUpdatedBaseStatements(policy));
 		}
 		return mav;
 	}
 
 	@PostMapping("/delete/{policyId}")
 	public RedirectView deletePolicy(@PathVariable Long policyId, Principal principal,
-			RedirectAttributes redirectAttributes) {
+			RedirectAttributes redirectAttributes) throws PolicyElementNotFoundException {
 		try {
 			PolicyEntity policy = policyService.deletePolicy(policyId, principal.getName());
 			redirectAttributes
@@ -81,6 +86,21 @@ public class PoliciesController {
 			redirectAttributes
 					.addFlashAttribute("failure", "Cannot delete policy. " + e.getMessage());
 		}
+		return new RedirectView("/policies");
+	}
+
+	/**
+	 * Exception handler for a {@link PolicyElementNotFoundException}. Returns to the base of this
+	 * controller
+	 *
+	 * @param e                  the exception thrown
+	 * @param redirectAttributes the redirect attributes to add the exception message
+	 * @return a string redirecting to the main page
+	 */
+	@ExceptionHandler(PolicyElementNotFoundException.class)
+	public RedirectView handlePolicyElementNotFound(Exception e,
+			RedirectAttributes redirectAttributes) {
+		redirectAttributes.addFlashAttribute("failure", e.getMessage());
 		return new RedirectView("/policies");
 	}
 

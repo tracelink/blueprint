@@ -32,5 +32,7 @@ public class ArgumentTypeTest {
 		} catch (UnsupportedOperationException e) {
 			Assert.assertEquals("A bar is not an array argument type", e.getMessage());
 		}
+
+		Assert.assertEquals(type, type.getBaseType());
 	}
 }

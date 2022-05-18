@@ -8,7 +8,7 @@ package com.tracelink.prodsec.blueprint.core.argument;
 public class BooleanArgumentType extends ArgumentType {
 
 	BooleanArgumentType() {
-		super("boolean", "boolean", false);
+		super("boolean", "Boolean", false);
 	}
 
 	/**

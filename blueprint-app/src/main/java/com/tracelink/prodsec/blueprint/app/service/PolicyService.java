@@ -1,18 +1,23 @@
 package com.tracelink.prodsec.blueprint.app.service;
 
+import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tracelink.prodsec.blueprint.app.exception.PolicyElementNotFoundException;
 import com.tracelink.prodsec.blueprint.app.exception.PolicyException;
-import com.tracelink.prodsec.blueprint.app.exception.PolicyImportException;
 import com.tracelink.prodsec.blueprint.app.policy.ConfiguredStatementDto;
 import com.tracelink.prodsec.blueprint.app.policy.ConfiguredStatementEntity;
 import com.tracelink.prodsec.blueprint.app.policy.PolicyClauseDto;
@@ -21,16 +26,15 @@ import com.tracelink.prodsec.blueprint.app.policy.PolicyDto;
 import com.tracelink.prodsec.blueprint.app.policy.PolicyEntity;
 import com.tracelink.prodsec.blueprint.app.policy.PolicyTypeEntity;
 import com.tracelink.prodsec.blueprint.app.repository.PolicyRepository;
+import com.tracelink.prodsec.blueprint.app.rulesets.SavedPolicyRuleset;
 import com.tracelink.prodsec.blueprint.app.statement.BaseStatementEntity;
-import com.tracelink.prodsec.blueprint.core.policy.ConfiguredStatement;
+import com.tracelink.prodsec.blueprint.core.PolicyBuilder;
 import com.tracelink.prodsec.blueprint.core.policy.Policy;
-import com.tracelink.prodsec.blueprint.core.policy.PolicyClause;
-import com.tracelink.prodsec.blueprint.core.rules.PolicyError;
-import com.tracelink.prodsec.blueprint.core.rules.PolicyReport;
-import com.tracelink.prodsec.blueprint.core.rules.RuleViolation;
+import com.tracelink.prodsec.blueprint.core.report.PolicyBuilderError;
+import com.tracelink.prodsec.blueprint.core.report.PolicyBuilderReport;
+import com.tracelink.prodsec.blueprint.core.report.RuleViolation;
+import com.tracelink.prodsec.blueprint.core.rulesets.configuration.ConfigurationRuleset;
 import com.tracelink.prodsec.blueprint.core.rulesets.logic.LogicRuleset;
-import com.tracelink.prodsec.blueprint.core.rulesets.validation.ValidationRuleset;
-import com.tracelink.prodsec.blueprint.core.validation.PolicyBuilder;
 
 /**
  * Service to validate policies and export them to Rego. Also allows for the
@@ -41,109 +45,26 @@ import com.tracelink.prodsec.blueprint.core.validation.PolicyBuilder;
 @Service
 public class PolicyService {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(PolicyService.class);
 	private final BaseStatementService baseStatementService;
+	private final PolicyTypeService policyTypeService;
 	private final PolicyRepository policyRepository;
 	private final PolicyBuilder policyBuilder;
 	private final ObjectMapper objectMapper;
 
 	public PolicyService(@Autowired BaseStatementService baseStatementService,
+			@Autowired PolicyTypeService policyTypeService,
 			@Autowired PolicyRepository policyRepository) {
 		this.baseStatementService = baseStatementService;
+		this.policyTypeService = policyTypeService;
 		this.policyRepository = policyRepository;
-		this.policyBuilder = new PolicyBuilder();
+		this.policyBuilder = PolicyBuilder.getInstance();
 		this.objectMapper = new ObjectMapper();
 	}
 
-	/**
-	 * Imports the policy as JSON and validates the form. Does not perform
-	 * validation on policy content, which happens during export. Returns a
-	 * {@link PolicyDto} object that can be rendered by the UI.
-	 *
-	 * @param policyJson the JSON of the policy to be imported
-	 * @return a policy DTO to render in the UI
-	 * @throws PolicyImportException if the JSON is not correctly formatted
-	 */
-	public PolicyDto importPolicy(String policyJson) throws PolicyImportException {
-		PolicyDto policy;
-		try {
-			policy = objectMapper.readValue(policyJson, PolicyDto.class);
-		} catch (JsonProcessingException e) {
-			throw new PolicyImportException(
-					"The imported policy is not formatted correctly: " + e.getMessage());
-		}
-		if (StringUtils.isBlank(policy.getPolicyType())) {
-			throw new PolicyImportException("The imported policy must have a policy type");
-		}
-		return policy;
-	}
-
-	/**
-	 * Exports the given policy DTO to a Rego policy, if it passes validation.
-	 *
-	 * @param policyDto the policy to export to Rego
-	 * @return the string containing the Rego policy
-	 * @throws PolicyException if the policy, clauses or base statements are invalid
-	 */
-	public String exportPolicy(PolicyDto policyDto) throws PolicyException {
-		Policy policy = validatePolicy(policyDto);
-		return policyBuilder.generateRego(policy);
-	}
-
-	private Policy validatePolicy(PolicyDto policyDto) throws PolicyException {
-		Policy policy = convertPolicyDtoToCore(policyDto);
-		PolicyReport report = policyBuilder.validate(policy, new LogicRuleset(false), new ValidationRuleset(false));
-		if (report.hasErrors() || report.hasViolations()) {
-			List<String> messages = report.getErrors().stream().map(PolicyError::getMessage)
-					.collect(Collectors.toList());
-			messages.addAll(report.getViolations().stream().map(RuleViolation::getMessage)
-					.collect(Collectors.toList()));
-			throw new PolicyException("Policy validation failed: " + String.join(", ", messages));
-			// TODO improve this to display errors in correct portion of policy
-		}
-		return policy;
-	}
-
 	/*
-	 * Conversion methods to/from core, DTO and Entity objects
+	 * Policy repository methods
 	 */
-
-	private Policy convertPolicyDtoToCore(PolicyDto policyDto) {
-		Policy policy = new Policy();
-		PolicyTypeEntity policyType = baseStatementService.getPolicyType(policyDto.getPolicyType());
-		if (policyType != null) {
-			policy.setPolicyType(policyType.toCore());
-		}
-		List<PolicyClause> policyClauses = policyDto.getClauses().stream()
-				.map(c -> convertClauseDtoToCore(c, policy))
-				.collect(Collectors.toList());
-		policy.setClauses(policyClauses);
-		return policy;
-	}
-
-	private PolicyClause convertClauseDtoToCore(PolicyClauseDto policyClauseDto, Policy policy) {
-		PolicyClause policyClause = new PolicyClause(policy);
-		List<ConfiguredStatement> statements = policyClauseDto.getStatements().stream()
-				.map(s -> convertStatementDtoToCore(s, policyClause)).collect(Collectors.toList());
-		policyClause.setStatements(statements);
-		return policyClause;
-	}
-
-	private ConfiguredStatement convertStatementDtoToCore(ConfiguredStatementDto statementDto,
-			PolicyClause policyClause) {
-		ConfiguredStatement statement = new ConfiguredStatement(policyClause);
-		BaseStatementEntity baseStatement = baseStatementService
-				.getBaseStatement(statementDto.getBaseStatementName());
-		if (baseStatement != null) {
-			statement.setBaseStatement(baseStatement.toCore());
-			if (baseStatement.isNegationAllowed()) {
-				statement.setNegated(statementDto.isNegated());
-			} else {
-				statement.setNegated(false);
-			}
-		}
-		statement.setArgumentValues(statementDto.getArgumentValues());
-		return statement;
-	}
 
 	/**
 	 * Gets a map of policy names to policy ids.
@@ -156,13 +77,19 @@ public class PolicyService {
 	}
 
 	/**
-	 * Gets the policy with the given id, or null.
+	 * Gets the policy with the given id.
 	 *
 	 * @param id the id of the policy to retrieve
 	 * @return the policy with the given id
+	 * @throws PolicyElementNotFoundException if no such policy exists
 	 */
-	public PolicyEntity getPolicy(Long id) {
-		return policyRepository.findById(id).orElse(null);
+	public PolicyEntity getPolicy(Long id) throws PolicyElementNotFoundException {
+		PolicyEntity policy = policyRepository.findById(id).orElse(null);
+		if (policy == null) {
+			throw new PolicyElementNotFoundException(MessageFormat
+					.format("There is no policy with the id ''{0}''", id));
+		}
+		return policy;
 	}
 
 	/**
@@ -170,44 +97,42 @@ public class PolicyService {
 	 *
 	 * @param name the name of the policy to retrieve
 	 * @return the policy with the given name
+	 * @throws PolicyElementNotFoundException if no such policy exists
 	 */
-	public PolicyEntity getPolicy(String name) {
-		return policyRepository.findByName(name);
+	public PolicyEntity getPolicy(String name) throws PolicyElementNotFoundException {
+		PolicyEntity policy = policyRepository.findByName(name);
+		if (policy == null) {
+			throw new PolicyElementNotFoundException(MessageFormat
+					.format("There is no policy with the name ''{0}''", name));
+		}
+		return policy;
 	}
+
+	/*
+	 * Policy management methods
+	 */
 
 	/**
 	 * Saves the given policy in the database, after validating it. Uses the given name and author
 	 * for the entity. Overwrites an existing policy with the same name if the authors match.
 	 *
 	 * @param policyDto the policy to save to the database
-	 * @param name      the name of the policy
-	 * @param author    the author of the policy
-	 * @throws PolicyException if the policy name is blank, if the user cannot edit the policy, or
-	 *                         if the policy is invalid
+	 * @throws PolicyElementNotFoundException if any of the policy types or base statements does
+	 *                                        not exist
+	 * @throws PolicyException                if the policy name is blank, if the user cannot edit
+	 *                                        the policy, or if the policy is invalid
 	 */
-	public void savePolicy(PolicyDto policyDto, String name, String author)
-			throws PolicyException {
-		Policy policy = validatePolicy(policyDto);
-		if (StringUtils.isBlank(name)) {
-			throw new PolicyException("A policy name cannot be blank");
-		}
-		PolicyEntity policyEntity = policyRepository.findByName(name);
-		if (policyEntity != null && !policyEntity.getAuthor().equalsIgnoreCase(author)) {
+	public void savePolicy(PolicyDto policyDto)
+			throws PolicyElementNotFoundException, PolicyException {
+		// Map policy to an existing or new entity
+		PolicyEntity policyEntity = convertPolicyDtoToEntity(policyDto);
+		// Ensure the user has permission to save this base statement if it already exists
+		if (!policyEntity.getAuthor().equalsIgnoreCase(policyDto.getAuthor())) {
 			throw new PolicyException(
 					"A policy with that name already exists and cannot be overwritten");
 		}
-
-		if (policyEntity == null) {
-			policyEntity = convertCoreToPolicyEntity(policy);
-		} else {
-			policyEntity
-					.setClauses(policy.getClauses().stream().map(this::convertCoreToClauseEntity)
-							.collect(Collectors.toList()));
-		}
-		policyEntity.setName(name);
-		policyEntity.setAuthor(author);
-		PolicyTypeEntity policyType = baseStatementService.getPolicyType(policyDto.getPolicyType());
-		policyEntity.setPolicyType(policyType);
+		// Perform validation on base statement and save
+		validatePolicy(policyEntity.toCore(), true);
 		policyRepository.saveAndFlush(policyEntity);
 	}
 
@@ -217,14 +142,14 @@ public class PolicyService {
 	 * @param policyId the id of the policy to delete
 	 * @param user     the user performing the delete
 	 * @return the deleted policy entity
-	 * @throws PolicyException if the policy id is invalid or if the user is not the author of the
-	 *                         policy
+	 * @throws PolicyElementNotFoundException if no policy with the given id exists
+	 * @throws PolicyException                if the policy id is invalid or if the user is not the
+	 *                                        author of the
+	 *                                        policy
 	 */
-	public PolicyEntity deletePolicy(Long policyId, String user) throws PolicyException {
-		PolicyEntity policy = policyRepository.findById(policyId).orElse(null);
-		if (policy == null) {
-			throw new PolicyException("Invalid policy id");
-		}
+	public PolicyEntity deletePolicy(Long policyId, String user)
+			throws PolicyElementNotFoundException, PolicyException {
+		PolicyEntity policy = getPolicy(policyId);
 		if (!policy.getAuthor().equals(user)) {
 			throw new PolicyException("You are not the author of the policy");
 		}
@@ -233,31 +158,133 @@ public class PolicyService {
 		return policy;
 	}
 
-	private PolicyEntity convertCoreToPolicyEntity(Policy policy) {
-		PolicyEntity policyEntity = new PolicyEntity();
-		policyEntity.setClauses(policy.getClauses().stream().map(this::convertCoreToClauseEntity)
-				.collect(Collectors.toList()));
+	/**
+	 * Imports the policy as JSON and validates the form. Does not perform
+	 * validation on policy content, which happens during export. Returns a
+	 * {@link PolicyDto} object that can be rendered by the UI.
+	 *
+	 * @param policyJson the JSON of the policy to be imported
+	 * @return a policy DTO to render in the UI
+	 * @throws PolicyException                if the JSON is not correctly formatted
+	 * @throws PolicyElementNotFoundException if any of the policy types or base statements does not
+	 *                                        exist
+	 */
+	public PolicyDto importPolicy(String policyJson)
+			throws PolicyException, PolicyElementNotFoundException {
+		PolicyDto policyDto;
+		try {
+			policyDto = objectMapper.readValue(policyJson, PolicyDto.class);
+		} catch (JsonProcessingException e) {
+			LOGGER.info("Policy import failed: {}", e.getMessage());
+			throw new PolicyException(
+					"The imported policy is not formatted correctly. Check the log for more details");
+		}
+		PolicyEntity policyEntity = convertPolicyDtoToEntity(policyDto);
+		validatePolicy(policyEntity.toCore(), false);
+		return policyEntity.toDto();
+	}
+
+	/**
+	 * Exports the given policy DTO to a Rego policy, if it passes validation.
+	 *
+	 * @param policyDto the policy to export to Rego
+	 * @return the string containing the Rego policy
+	 * @throws PolicyException                if the policy, clauses or base statements are invalid
+	 * @throws PolicyElementNotFoundException if referenced base statements or policy types do not
+	 *                                        exist
+	 */
+	public String exportPolicy(PolicyDto policyDto)
+			throws PolicyException, PolicyElementNotFoundException {
+		PolicyEntity policyEntity = convertPolicyDtoToEntity(policyDto);
+		Policy policy = policyEntity.toCore();
+		validatePolicy(policy, false);
+		return policyBuilder.generateRego(policy);
+	}
+
+	/**
+	 * Gets a set of updated base statements for the given policy, if any of the
+	 * referenced base statement are not the latest released version.
+	 *
+	 * @param policy the policy to get updated base statements for
+	 * @return set of versioned names of latest base statements
+	 */
+	public Set<String> getUpdatedBaseStatements(PolicyEntity policy) {
+		return policy.getClauses().stream().map(PolicyClauseEntity::getStatements)
+				.flatMap(List::stream).map(ConfiguredStatementEntity::getBaseStatement)
+				.map(baseStatement -> baseStatementService
+						.getUpdatedBaseStatement(baseStatement.getName(),
+								baseStatement.getVersion()))
+				.filter(Optional::isPresent).map(Optional::get)
+				.map(BaseStatementEntity::getVersionedName).collect(Collectors.toSet());
+	}
+
+	/*
+	 * Conversion methods to/from core, DTO and Entity objects
+	 */
+
+	private PolicyEntity convertPolicyDtoToEntity(PolicyDto policyDto)
+			throws PolicyElementNotFoundException {
+		PolicyEntity policyEntity = policyRepository.findByName(policyDto.getName());
+		if (policyEntity == null) {
+			policyEntity = new PolicyEntity();
+			policyEntity.setName(policyDto.getName());
+			policyEntity.setAuthor(policyDto.getAuthor());
+		}
+		PolicyTypeEntity policyType = policyTypeService.getPolicyType(policyDto.getPolicyType());
+		policyEntity.setPolicyType(policyType);
+		List<PolicyClauseEntity> clauses = new ArrayList<>();
+		for (PolicyClauseDto clause : policyDto.getClauses()) {
+			clauses.add(convertClauseDtoToEntity(clause));
+		}
+		policyEntity.setClauses(clauses);
 		return policyEntity;
 	}
 
-	private PolicyClauseEntity convertCoreToClauseEntity(PolicyClause policyClause) {
-		PolicyClauseEntity policyClauseEntity = new PolicyClauseEntity();
-		policyClauseEntity.setStatements(policyClause.getStatements().stream()
-				.map(this::convertCoreToStatementEntity).collect(Collectors.toList()));
-		return policyClauseEntity;
+	private PolicyClauseEntity convertClauseDtoToEntity(PolicyClauseDto clauseDto)
+			throws PolicyElementNotFoundException {
+		PolicyClauseEntity clause = new PolicyClauseEntity();
+		List<ConfiguredStatementEntity> statements = new ArrayList<>();
+		for (ConfiguredStatementDto statement : clauseDto.getStatements()) {
+			statements.add(convertStatementDtoToEntity(statement));
+		}
+		clause.setStatements(statements);
+		return clause;
 	}
 
-	private ConfiguredStatementEntity convertCoreToStatementEntity(ConfiguredStatement statement) {
-		BaseStatementEntity baseStatementEntity = baseStatementService
-				.getBaseStatement(statement.getBaseStatement().getName());
-		ConfiguredStatementEntity statementEntity = new ConfiguredStatementEntity();
-		statementEntity.setBaseStatement(baseStatementEntity);
-		if (baseStatementEntity.isNegationAllowed()) {
-			statementEntity.setNegated(statement.isNegated());
+	private ConfiguredStatementEntity convertStatementDtoToEntity(
+			ConfiguredStatementDto statementDto) throws PolicyElementNotFoundException {
+		ConfiguredStatementEntity statement = new ConfiguredStatementEntity();
+		BaseStatementEntity baseStatement = baseStatementService
+				.getBaseStatement(statementDto.getBaseStatementName());
+		statement.setBaseStatement(baseStatement);
+		if (baseStatement.isNegationAllowed()) {
+			statement.setNegated(statementDto.isNegated());
 		} else {
-			statementEntity.setNegated(false);
+			statement.setNegated(false);
 		}
-		statementEntity.setArgumentValues(statement.getArgumentValues());
-		return statementEntity;
+		statement.setArgumentValues(statementDto.getArgumentValues());
+		return statement;
+	}
+
+	/*
+	 * Policy validation methods
+	 */
+
+	private void validatePolicy(Policy policy, boolean save) throws PolicyException {
+		PolicyBuilderReport report;
+		if (save) {
+			report = policyBuilder.validate(policy, new ConfigurationRuleset(), new LogicRuleset(),
+					new SavedPolicyRuleset());
+		} else {
+			report = policyBuilder.validate(policy, new ConfigurationRuleset(), new LogicRuleset());
+		}
+		if (report.hasErrors() || report.hasViolations()) {
+			List<String> messages = report.getErrors().stream().map(PolicyBuilderError::getMessage)
+					.collect(Collectors.toList());
+			messages.addAll(report.getViolations().stream().map(RuleViolation::getMessage)
+					.collect(Collectors.toList()));
+			throw new PolicyException("Policy validation failed: " + String.join(", ", messages));
+			// TODO improve this to display errors in correct portion of policy
+		}
 	}
 }

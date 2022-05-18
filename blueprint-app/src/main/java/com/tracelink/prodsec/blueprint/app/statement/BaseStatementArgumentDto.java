@@ -6,8 +6,6 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import com.tracelink.prodsec.blueprint.core.argument.ArgumentType;
-import com.tracelink.prodsec.blueprint.core.statement.ConfiguredArgument;
-import com.tracelink.prodsec.blueprint.core.statement.ConstantArgument;
 
 /**
  * DTO for a base statement argument. Used to transfer data to the UI and to perform validation
@@ -18,33 +16,23 @@ import com.tracelink.prodsec.blueprint.core.statement.ConstantArgument;
  */
 public class BaseStatementArgumentDto {
 
-	@NotNull(message = "Constant cannot be null", groups = {ConstantArgument.class,
-			ConfiguredArgument.class})
-	private boolean constant;
-	@NotBlank(message = "Value cannot be blank for a constant argument", groups = ConstantArgument.class)
-	private String value;
-	@NotBlank(message = "Description cannot be blank for a configured argument", groups = ConfiguredArgument.class)
+	@NotBlank(message = "Parameter cannot be blank")
+	private String parameter;
+	@NotBlank(message = "Description cannot be blank")
 	private String description;
-	@NotNull(message = "Argument type cannot be null for a configured argument", groups = ConfiguredArgument.class)
+	@NotNull(message = "Argument type cannot be null")
 	private ArgumentType type;
-	private Set<@NotBlank(message = "Enumerated values cannot be blank for a configured argument", groups = ConfiguredArgument.class) String> enumValues;
-	private boolean uniqueItems;
-	private boolean orderedItems;
+	// enumValues may be null or empty
+	private Set<@NotBlank(message = "Enumerated values cannot be blank") String> enumValues;
+	private boolean arrayUnordered;
+	private boolean arrayUnique;
 
-	public boolean isConstant() {
-		return constant;
+	public String getParameter() {
+		return parameter;
 	}
 
-	public void setConstant(boolean constant) {
-		this.constant = constant;
-	}
-
-	public String getValue() {
-		return value;
-	}
-
-	public void setValue(String value) {
-		this.value = value;
+	public void setParameter(String parameter) {
+		this.parameter = parameter;
 	}
 
 	public String getDescription() {
@@ -71,34 +59,19 @@ public class BaseStatementArgumentDto {
 		this.enumValues = enumValues;
 	}
 
-	public boolean hasUniqueItems() {
-		return uniqueItems;
+	public boolean isArrayUnique() {
+		return arrayUnique;
 	}
 
-	public void setUniqueItems(boolean uniqueItems) {
-		this.uniqueItems = uniqueItems;
+	public void setArrayUnique(boolean arrayUnique) {
+		this.arrayUnique = arrayUnique;
 	}
 
-	public boolean hasOrderedItems() {
-		return orderedItems;
+	public boolean isArrayUnordered() {
+		return arrayUnordered;
 	}
 
-	public void setOrderedItems(boolean orderedItems) {
-		this.orderedItems = orderedItems;
-	}
-
-	/**
-	 * Converts this DTO object to an entity object to be stored in the database.
-	 *
-	 * @return the entity representation of this DTO
-	 */
-	public BaseStatementArgumentEntity toEntity() {
-		BaseStatementArgumentEntity baseStatementArgument = new BaseStatementArgumentEntity();
-		baseStatementArgument.setConstant(constant);
-		baseStatementArgument.setValue(value);
-		baseStatementArgument.setDescription(description);
-		baseStatementArgument.setType(type);
-		baseStatementArgument.setEnumValues(enumValues);
-		return baseStatementArgument;
+	public void setArrayUnordered(boolean arrayUnordered) {
+		this.arrayUnordered = arrayUnordered;
 	}
 }

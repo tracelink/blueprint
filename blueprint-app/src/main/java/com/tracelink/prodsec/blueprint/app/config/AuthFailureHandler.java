@@ -12,7 +12,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 
 /**
- * Class to handle display error on authentication failure.
+ * Class to handle and display error on authentication failure.
  *
  * @author csmith, mcool
  */

@@ -16,6 +16,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.tracelink.prodsec.blueprint.core.policy.Policy;
+
 /**
  * Entity for a policy.
  *
@@ -30,11 +32,11 @@ public class PolicyEntity {
 	@Column(name = "policy_id")
 	private long id;
 
-	@Column(name = "author")
-	private String author;
-
 	@Column(name = "name")
 	private String name;
+
+	@Column(name = "author")
+	private String author;
 
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "policy_type_id", nullable = false)
@@ -48,20 +50,20 @@ public class PolicyEntity {
 		return id;
 	}
 
-	public String getAuthor() {
-		return author;
-	}
-
-	public void setAuthor(String author) {
-		this.author = author;
-	}
-
 	public String getName() {
 		return name;
 	}
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getAuthor() {
+		return author;
+	}
+
+	public void setAuthor(String author) {
+		this.author = author;
 	}
 
 	public PolicyTypeEntity getPolicyType() {
@@ -81,6 +83,23 @@ public class PolicyEntity {
 			this.clauses.clear();
 			this.clauses.addAll(clauses);
 		}
+	}
+
+	/**
+	 * Converts this entity object to a core object for validation and export.
+	 *
+	 * @return the core representation of this entity
+	 */
+	public Policy toCore() {
+		Policy policy = new Policy();
+		policy.setName(name);
+		policy.setAuthor(author);
+		if (policyType != null) {
+			policy.setPolicyType(policyType.getName());
+		}
+		policy.setClauses(clauses.stream().map(PolicyClauseEntity::toCore)
+				.collect(Collectors.toUnmodifiableList()));
+		return policy;
 	}
 
 	/**

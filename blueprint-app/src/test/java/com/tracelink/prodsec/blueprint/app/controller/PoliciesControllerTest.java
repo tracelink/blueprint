@@ -1,7 +1,13 @@
 package com.tracelink.prodsec.blueprint.app.controller;
 
+import com.tracelink.prodsec.blueprint.app.exception.PolicyElementNotFoundException;
+import com.tracelink.prodsec.blueprint.app.exception.PolicyException;
+import com.tracelink.prodsec.blueprint.app.policy.PolicyEntity;
+import com.tracelink.prodsec.blueprint.app.policy.PolicyTypeEntity;
+import com.tracelink.prodsec.blueprint.app.service.BaseStatementService;
+import com.tracelink.prodsec.blueprint.app.service.PolicyService;
+import com.tracelink.prodsec.blueprint.app.statement.BaseStatementDto;
 import java.util.Collections;
-
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,13 +25,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-
-import com.tracelink.prodsec.blueprint.app.exception.PolicyImportException;
-import com.tracelink.prodsec.blueprint.app.policy.PolicyEntity;
-import com.tracelink.prodsec.blueprint.app.policy.PolicyTypeEntity;
-import com.tracelink.prodsec.blueprint.app.service.BaseStatementService;
-import com.tracelink.prodsec.blueprint.app.service.PolicyService;
-import com.tracelink.prodsec.blueprint.app.statement.BaseStatementDto;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -58,7 +57,8 @@ public class PoliciesControllerTest {
 	@WithMockUser
 	public void testGetPoliciesNone() throws Exception {
 		BDDMockito.when(policyService.getPolicies()).thenReturn(Collections.emptyMap());
-		BDDMockito.when(baseStatementService.getBaseStatementsForPolicyType(BDDMockito.anyString()))
+		BDDMockito.when(baseStatementService
+				.getLatestBaseStatementsForPolicyType(BDDMockito.any(PolicyTypeEntity.class)))
 				.thenReturn(Collections.emptyMap());
 
 		mockMvc.perform(MockMvcRequestBuilders.get("/policies"))
@@ -77,7 +77,7 @@ public class PoliciesControllerTest {
 		BDDMockito.when(policyService.getPolicies())
 				.thenReturn(Collections.singletonMap("foo", 1L));
 		BDDMockito.when(policyService.getPolicy(BDDMockito.anyLong())).thenReturn(policy);
-		BDDMockito.when(baseStatementService.getBaseStatementsForPolicyType(BDDMockito.anyString()))
+		BDDMockito.when(baseStatementService.getAllBaseStatements())
 				.thenReturn(Collections.singletonMap("bar", new BaseStatementDto()));
 
 		mockMvc.perform(MockMvcRequestBuilders.get("/policies"))
@@ -101,7 +101,7 @@ public class PoliciesControllerTest {
 	public void testGetPoliciesWithId() throws Exception {
 		BDDMockito.when(policyService.getPolicies())
 				.thenReturn(Collections.singletonMap("foo", 1L));
-		BDDMockito.when(baseStatementService.getBaseStatementsForPolicyType(BDDMockito.anyString()))
+		BDDMockito.when(baseStatementService.getAllBaseStatements())
 				.thenReturn(Collections.singletonMap("bar", new BaseStatementDto()));
 		BDDMockito.when(policyService.getPolicy(1L)).thenReturn(policy);
 
@@ -126,7 +126,7 @@ public class PoliciesControllerTest {
 	public void testGetPoliciesWithInvalidId() throws Exception {
 		BDDMockito.when(policyService.getPolicies())
 				.thenReturn(Collections.singletonMap("foo", 1L));
-		BDDMockito.when(baseStatementService.getBaseStatementsForPolicyType(BDDMockito.anyString()))
+		BDDMockito.when(baseStatementService.getAllBaseStatements())
 				.thenReturn(Collections.singletonMap("bar", new BaseStatementDto()));
 		BDDMockito.when(policyService.getPolicy(1L)).thenReturn(policy);
 
@@ -166,7 +166,7 @@ public class PoliciesControllerTest {
 	@Test
 	@WithMockUser
 	public void testDeletePolicyInvalid() throws Exception {
-		BDDMockito.doThrow(new PolicyImportException("Invalid id")).when(policyService)
+		BDDMockito.doThrow(new PolicyException("Invalid id")).when(policyService)
 				.deletePolicy(BDDMockito.anyLong(), BDDMockito.anyString());
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/policies/delete/2")
@@ -177,6 +177,20 @@ public class PoliciesControllerTest {
 						.attribute("failure", "Cannot delete policy. Invalid id"));
 
 		BDDMockito.verify(policyService).deletePolicy(2L, "user");
+	}
+
+	@Test
+	@WithMockUser
+	public void testHandlePolicyElementNotFound() throws Exception {
+		BDDMockito.doThrow(new PolicyElementNotFoundException("not found")).when(
+				policyService)
+				.deletePolicy(1L, "user");
+		mockMvc.perform(MockMvcRequestBuilders.post("/policies/delete/1")
+				.with(SecurityMockMvcRequestPostProcessors.csrf()))
+				.andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+				.andExpect(MockMvcResultMatchers.redirectedUrl("/policies"))
+				.andExpect(MockMvcResultMatchers.flash().attribute("failure",
+						"not found"));
 	}
 
 }

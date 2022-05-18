@@ -1,0 +1,30 @@
+<div class="row">
+  <!-- Functions -->
+  <div class="col-lg-3">
+    <div class="card card-small mb-4" style="max-height: 750px">
+      <div class="card-header border-bottom p-2">
+        <div class="d-flex justify-content-between">
+          <h6 class="card-title align-self-center mb-0">Functions</h6>
+          <a href="/functions/create">
+            <button class="btn btn-primary px-2">Create function</button>
+          </a>
+        </div>
+      </div>
+      <div class="card-body overflow-auto">
+        <div class="list-group list-group-flush">
+          <a th:each="entry : ${functions}" th:href="'/functions/' + ${entry.value}"
+             th:class="${entry.key == function?.name} ? 'list-group-item list-group-item-action active px-3' : 'list-group-item list-group-item-action px-3'"
+             th:text="${entry.key}">
+          </a>
+        </div>
+        <p th:if="${function == null}" class="card-text">There are no functions to display</p>
+      </div>
+    </div>
+  </div>
+  <!-- End Functions -->
+  <!-- Function Details -->
+  <div class="col-lg-9" th:if="${function != null}">
+    <div th:replace="fragments/function :: function(${function}, ${editable})"></div>
+  </div>
+  <!-- End Function Details -->
+</div>

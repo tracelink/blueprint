@@ -3,8 +3,6 @@ package com.tracelink.prodsec.blueprint.core.argument;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.tracelink.prodsec.blueprint.core.argument.IntegerArgumentType;
-
 public class IntegerArgumentTypeTest {
 
 	@Test

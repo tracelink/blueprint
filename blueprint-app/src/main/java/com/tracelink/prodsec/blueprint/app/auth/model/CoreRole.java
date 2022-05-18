@@ -8,12 +8,14 @@ package com.tracelink.prodsec.blueprint.app.auth.model;
  */
 public enum CoreRole {
 
-	USER(CoreRole.USER_ROLE, "Basic Role", true),
-	CREATOR(CoreRole.CREATOR_ROLE, "Create Statements", false),
+	USER(CoreRole.USER_ROLE, "Basic privileges", true),
+	BASE_STATEMENT_EDITOR(CoreRole.BASE_STMT_EDITOR_ROLE, "Edit base statements", false),
+	FUNCTION_EDITOR(CoreRole.FUNCTION_EDITOR_ROLE, "Edit functions", false),
 	ADMIN(CoreRole.ADMIN_ROLE, "Manage the system", false);
 
 	public static final String USER_ROLE = "User";
-	public static final String CREATOR_ROLE = "Creator";
+	public static final String BASE_STMT_EDITOR_ROLE = "BaseStatementEditor";
+	public static final String FUNCTION_EDITOR_ROLE = "FunctionEditor";
 	public static final String ADMIN_ROLE = "Admin";
 
 	private final String name;
@@ -37,6 +39,5 @@ public enum CoreRole {
 	public boolean isDefaultRole() {
 		return defaultRole;
 	}
-
 
 }

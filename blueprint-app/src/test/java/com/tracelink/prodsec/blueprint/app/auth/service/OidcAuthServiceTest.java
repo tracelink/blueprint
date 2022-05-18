@@ -1,11 +1,13 @@
 package com.tracelink.prodsec.blueprint.app.auth.service;
 
+import com.tracelink.prodsec.blueprint.app.auth.model.OidcUserDetails;
+import com.tracelink.prodsec.blueprint.app.auth.model.RoleEntity;
+import com.tracelink.prodsec.blueprint.app.auth.model.UserEntity;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -26,10 +28,6 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import com.tracelink.prodsec.blueprint.app.auth.model.OidcUserDetails;
-import com.tracelink.prodsec.blueprint.app.auth.model.RoleEntity;
-import com.tracelink.prodsec.blueprint.app.auth.model.UserEntity;
 
 
 @RunWith(SpringRunner.class)

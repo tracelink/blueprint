@@ -1,0 +1,32 @@
+<div class="row">
+  <!-- Base Statements -->
+  <div class="col-lg-3">
+    <div class="card card-small mb-4" style="max-height: 750px">
+      <div class="card-header border-bottom p-2">
+        <div class="d-flex justify-content-between">
+          <h6 class="card-title align-self-center mb-0">Base Statements</h6>
+          <a href="/base-statements/create">
+            <button class="btn btn-primary px-2">Create base statement</button>
+          </a>
+        </div>
+      </div>
+      <div class="card-body overflow-auto">
+        <div class="list-group list-group-flush">
+          <a th:each="entry : ${baseStatements}" th:href="'/base-statements/' + ${entry.value}"
+             th:class="${entry.key == baseStatement?.name} ? 'list-group-item list-group-item-action active px-3' : 'list-group-item list-group-item-action px-3'"
+             th:text="${entry.key}">
+          </a>
+        </div>
+        <p th:if="${baseStatement == null}" class="card-text">There are no base statements to
+          display</p>
+      </div>
+    </div>
+  </div>
+  <!-- End Base Statements -->
+  <!-- Base Statement Details -->
+  <div class="col-lg-9" th:if="${baseStatement != null}">
+    <div
+        th:replace="fragments/base-statement :: baseStatement(${baseStatement}, ${editable})"></div>
+  </div>
+  <!-- End Base Statement Details -->
+</div>

@@ -8,7 +8,7 @@ package com.tracelink.prodsec.blueprint.core.argument;
 public class StringArgumentType extends ArgumentType {
 
 	StringArgumentType() {
-		super("string", "string", false);
+		super("string", "String", false);
 	}
 
 	/**

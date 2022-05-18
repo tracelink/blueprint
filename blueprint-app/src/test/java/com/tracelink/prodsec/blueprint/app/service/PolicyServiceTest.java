@@ -1,11 +1,23 @@
 package com.tracelink.prodsec.blueprint.app.service;
 
+import com.tracelink.prodsec.blueprint.app.exception.PolicyElementNotFoundException;
+import com.tracelink.prodsec.blueprint.app.exception.PolicyException;
+import com.tracelink.prodsec.blueprint.app.policy.ConfiguredStatementDto;
+import com.tracelink.prodsec.blueprint.app.policy.ConfiguredStatementEntity;
+import com.tracelink.prodsec.blueprint.app.policy.PolicyClauseDto;
+import com.tracelink.prodsec.blueprint.app.policy.PolicyClauseEntity;
+import com.tracelink.prodsec.blueprint.app.policy.PolicyDto;
+import com.tracelink.prodsec.blueprint.app.policy.PolicyEntity;
+import com.tracelink.prodsec.blueprint.app.policy.PolicyTypeEntity;
+import com.tracelink.prodsec.blueprint.app.repository.PolicyRepository;
+import com.tracelink.prodsec.blueprint.app.statement.BaseStatementEntity;
+import com.tracelink.prodsec.blueprint.app.statement.BaseStatementFunctionEntity;
+import com.tracelink.prodsec.blueprint.core.statement.PolicyElementState;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,22 +27,13 @@ import org.mockito.BDDMockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.tracelink.prodsec.blueprint.app.exception.PolicyException;
-import com.tracelink.prodsec.blueprint.app.exception.PolicyImportException;
-import com.tracelink.prodsec.blueprint.app.policy.ConfiguredStatementDto;
-import com.tracelink.prodsec.blueprint.app.policy.PolicyClauseDto;
-import com.tracelink.prodsec.blueprint.app.policy.PolicyDto;
-import com.tracelink.prodsec.blueprint.app.policy.PolicyEntity;
-import com.tracelink.prodsec.blueprint.app.policy.PolicyTypeEntity;
-import com.tracelink.prodsec.blueprint.app.repository.PolicyRepository;
-import com.tracelink.prodsec.blueprint.app.statement.BaseStatementEntity;
-import com.tracelink.prodsec.blueprint.app.statement.BaseStatementFunctionEntity;
-
 @RunWith(SpringRunner.class)
 public class PolicyServiceTest {
 
 	@MockBean
 	private BaseStatementService baseStatementService;
+	@MockBean
+	private PolicyTypeService policyTypeService;
 	@MockBean
 	private PolicyRepository policyRepository;
 
@@ -39,44 +42,69 @@ public class PolicyServiceTest {
 
 	@Before
 	public void setup() {
-		policyService = new PolicyService(baseStatementService, policyRepository);
+		policyService = new PolicyService(baseStatementService, policyTypeService,
+				policyRepository);
 		policyType = new PolicyTypeEntity();
 		policyType.setName("System");
 	}
 
 	@Test
-	public void testImportPolicyJsonException() {
+	public void testImportPolicyJsonException() throws Exception {
 		try {
 			policyService.importPolicy("foo");
 			Assert.fail();
-		} catch (PolicyImportException e) {
-			Assert.assertTrue(e.getMessage().startsWith(
-					"The imported policy is not formatted correctly: Unrecognized token 'foo'"));
+		} catch (PolicyException e) {
+			Assert.assertEquals(
+					"The imported policy is not formatted correctly. Check the log for more details",
+					e.getMessage());
 		}
 	}
 
 	@Test
-	public void testImportPolicy() throws Exception {
+	public void testImportPolicyInvalid() throws Exception {
+		BDDMockito.when(policyTypeService.getPolicyType("Foo"))
+				.thenReturn(new PolicyTypeEntity("Foo"));
+		try {
+			policyService
+					.importPolicy("{\"policyType\":\"Foo\", \"clauses\":[{\"statements\":[]}]}");
+		} catch (PolicyException e) {
+			Assert.assertEquals(
+					"Policy validation failed: A policy clause must have at least one configured statement",
+					e.getMessage());
+		}
+	}
+
+	@Test
+	public void testImportPolicyValid() throws Exception {
+		BDDMockito.when(policyTypeService.getPolicyType("System"))
+				.thenReturn(new PolicyTypeEntity("System"));
+		BDDMockito.when(baseStatementService.getBaseStatement("Base Statement"))
+				.thenReturn(createValidBaseStatementEntity());
 		PolicyDto policyDto = policyService
-				.importPolicy("{\"policyType\":\"System\", \"clauses\":[{\"statements\":[]}]}");
+				.importPolicy(
+						"{\"policyType\":\"System\", \"clauses\":[{\"statements\":[{\"baseStatementName\": \"Base Statement\"}]}]}");
 		Assert.assertEquals(1, policyDto.getClauses().size());
-		Assert.assertTrue(policyDto.getClauses().get(0).getStatements().isEmpty());
+		Assert.assertFalse(policyDto.getClauses().get(0).getStatements().isEmpty());
 		Assert.assertEquals("System", policyDto.getPolicyType());
 	}
 
 	@Test
 	public void testImportPolicyBlankPolicyType() throws Exception {
+		BDDMockito.when(baseStatementService.getBaseStatement("Base Statement"))
+				.thenReturn(createValidBaseStatementEntity());
 		try {
 			policyService
-					.importPolicy("{\"policyType\":\"\", \"clauses\":[{\"statements\":[]}]}");
+					.importPolicy(
+							"{\"policyType\":\"\", \"clauses\":[{\"statements\":[{\"baseStatementName\": \"Base Statement\"}]}]}");
 			Assert.fail();
-		} catch (PolicyImportException e) {
-			Assert.assertEquals("The imported policy must have a policy type", e.getMessage());
+		} catch (PolicyException e) {
+			Assert.assertEquals("Policy validation failed: A policy must have a policy type",
+					e.getMessage());
 		}
 	}
 
 	@Test
-	public void testExportPolicyConstraintViolations() {
+	public void testExportPolicyConstraintViolations() throws Exception {
 		PolicyDto policyDto = new PolicyDto();
 		try {
 			policyService.exportPolicy(policyDto);
@@ -84,7 +112,7 @@ public class PolicyServiceTest {
 		} catch (PolicyException e) {
 			Assert.assertTrue(e.getMessage().contains("Policy validation failed: "));
 			Assert.assertTrue(e.getMessage().contains("A policy must have at least one clause"));
-			Assert.assertTrue(e.getMessage().contains("A policy must have a type"));
+			Assert.assertTrue(e.getMessage().contains("A policy must have a policy type"));
 		}
 	}
 
@@ -93,13 +121,13 @@ public class PolicyServiceTest {
 		PolicyDto policyDto = createValidPolicyDto();
 		BaseStatementEntity baseStatement = createValidBaseStatementEntity();
 
-		BDDMockito.when(baseStatementService.getPolicyType("System")).thenReturn(policyType);
+		BDDMockito.when(policyTypeService.getPolicyType("System")).thenReturn(policyType);
 		BDDMockito.when(baseStatementService.getBaseStatement("Base Statement"))
 				.thenReturn(baseStatement);
 
 		String rego = policyService.exportPolicy(policyDto);
 		Assert.assertEquals(
-				"default allow = false\n\nallow {\n\tnot function_name\n}\n\nfunction_name {\n\t1 == 1\n}\n\n",
+				"package blueprint\n\ndefault allow = false\n\nallow {\n\tnot function_name\n}\n\nfunction_name {\n\t1 == 1\n}\n\n",
 				rego);
 
 	}
@@ -110,13 +138,13 @@ public class PolicyServiceTest {
 		BaseStatementEntity baseStatement = createValidBaseStatementEntity();
 		baseStatement.setNegationAllowed(false);
 
-		BDDMockito.when(baseStatementService.getPolicyType("System")).thenReturn(policyType);
+		BDDMockito.when(policyTypeService.getPolicyType("System")).thenReturn(policyType);
 		BDDMockito.when(baseStatementService.getBaseStatement("Base Statement"))
 				.thenReturn(baseStatement);
 
 		String rego = policyService.exportPolicy(policyDto);
 		Assert.assertEquals(
-				"default allow = false\n\nallow {\n\tfunction_name\n}\n\nfunction_name {\n\t1 == 1\n}\n\n",
+				"package blueprint\n\ndefault allow = false\n\nallow {\n\tfunction_name\n}\n\nfunction_name {\n\t1 == 1\n}\n\n",
 				rego);
 
 	}
@@ -138,17 +166,22 @@ public class PolicyServiceTest {
 	}
 
 	@Test
-	public void testGetPolicyById() {
+	public void testGetPolicyByIdNotFound() throws Exception {
 		PolicyEntity policy = new PolicyEntity();
 		policy.setName("Foo");
 		BDDMockito.when(policyRepository.findById(1L)).thenReturn(Optional.of(policy));
 		BDDMockito.when(policyRepository.findById(2L)).thenReturn(Optional.empty());
 		Assert.assertEquals(policy, policyService.getPolicy(1L));
-		Assert.assertNull(policyService.getPolicy(2L));
+		try {
+			policyService.getPolicy(2L);
+			Assert.fail();
+		} catch (PolicyElementNotFoundException e) {
+			Assert.assertEquals("There is no policy with the id '2'", e.getMessage());
+		}
 	}
 
 	@Test
-	public void testGetPolicyByName() {
+	public void testGetPolicyByName() throws Exception {
 		PolicyEntity policy = new PolicyEntity();
 		policy.setName("Foo");
 		BDDMockito.when(policyRepository.findByName("Foo")).thenReturn(policy);
@@ -156,29 +189,41 @@ public class PolicyServiceTest {
 	}
 
 	@Test
-	public void testSavePolicyBlankName() {
-		BDDMockito.when(baseStatementService.getPolicyType("System")).thenReturn(policyType);
-		BDDMockito.when(baseStatementService.getBaseStatement("Base Statement"))
-				.thenReturn(createValidBaseStatementEntity());
-
+	public void testGetPolicyByNameNotFound() {
 		try {
-			policyService.savePolicy(createValidPolicyDto(), "", "user");
+			policyService.getPolicy("foo");
 			Assert.fail();
-		} catch (PolicyException e) {
-			Assert.assertEquals("A policy name cannot be blank", e.getMessage());
+		} catch (PolicyElementNotFoundException e) {
+			Assert.assertEquals("There is no policy with the name 'foo'", e.getMessage());
 		}
 	}
 
 	@Test
-	public void testSavePolicyWrongAuthor() {
+	public void testSavePolicyBlankName() throws Exception {
+		BDDMockito.when(policyTypeService.getPolicyType("System")).thenReturn(policyType);
+		BDDMockito.when(baseStatementService.getBaseStatement("Base Statement"))
+				.thenReturn(createValidBaseStatementEntity());
+
+		try {
+			PolicyDto policyDto = createValidPolicyDto();
+			policyDto.setName(null);
+			policyService.savePolicy(policyDto);
+			Assert.fail();
+		} catch (PolicyException e) {
+			Assert.assertEquals("Policy validation failed: Name cannot be blank", e.getMessage());
+		}
+	}
+
+	@Test
+	public void testSavePolicyWrongAuthor() throws Exception {
 		PolicyEntity policy = new PolicyEntity();
 		policy.setAuthor("user2");
-		BDDMockito.when(baseStatementService.getPolicyType("System")).thenReturn(policyType);
+		BDDMockito.when(policyTypeService.getPolicyType("System")).thenReturn(policyType);
 		BDDMockito.when(baseStatementService.getBaseStatement("Base Statement"))
 				.thenReturn(createValidBaseStatementEntity());
 		BDDMockito.when(policyRepository.findByName("Name")).thenReturn(policy);
 		try {
-			policyService.savePolicy(createValidPolicyDto(), "Name", "user");
+			policyService.savePolicy(createValidPolicyDto());
 			Assert.fail();
 		} catch (PolicyException e) {
 			Assert.assertEquals("A policy with that name already exists and cannot be overwritten",
@@ -188,11 +233,11 @@ public class PolicyServiceTest {
 
 	@Test
 	public void testSavePolicyNew() throws Exception {
-		BDDMockito.when(baseStatementService.getPolicyType("System")).thenReturn(policyType);
+		BDDMockito.when(policyTypeService.getPolicyType("System")).thenReturn(policyType);
 		BDDMockito.when(baseStatementService.getBaseStatement("Base Statement"))
 				.thenReturn(createValidBaseStatementEntity());
 
-		policyService.savePolicy(createValidPolicyDto(), "Name", "user");
+		policyService.savePolicy(createValidPolicyDto());
 		ArgumentCaptor<PolicyEntity> policyCaptor = ArgumentCaptor.forClass(PolicyEntity.class);
 		BDDMockito.verify(policyRepository).saveAndFlush(policyCaptor.capture());
 		Assert.assertEquals("Name", policyCaptor.getValue().getName());
@@ -204,31 +249,32 @@ public class PolicyServiceTest {
 		BaseStatementEntity baseStatement = createValidBaseStatementEntity();
 		baseStatement.setNegationAllowed(false);
 		PolicyEntity policy = new PolicyEntity();
+		policy.setName("Name");
 		policy.setAuthor("user");
-		BDDMockito.when(baseStatementService.getPolicyType("System")).thenReturn(policyType);
+		BDDMockito.when(policyTypeService.getPolicyType("System")).thenReturn(policyType);
 		BDDMockito.when(baseStatementService.getBaseStatement("Base Statement"))
 				.thenReturn(baseStatement);
 		BDDMockito.when(policyRepository.findByName("Name")).thenReturn(policy);
 
-		policyService.savePolicy(createValidPolicyDto(), "Name", "user");
+		policyService.savePolicy(createValidPolicyDto());
 		BDDMockito.verify(policyRepository).saveAndFlush(policy);
 		Assert.assertEquals("Name", policy.getName());
 		Assert.assertEquals("user", policy.getAuthor());
 	}
 
 	@Test
-	public void testDeletePolicyInvalidId() {
+	public void testDeletePolicyInvalidId() throws Exception {
 		BDDMockito.when(policyRepository.findById(1L)).thenReturn(Optional.empty());
 		try {
 			policyService.deletePolicy(1L, "user");
 			Assert.fail();
-		} catch (PolicyException e) {
-			Assert.assertEquals("Invalid policy id", e.getMessage());
+		} catch (PolicyElementNotFoundException e) {
+			Assert.assertEquals("There is no policy with the id '1'", e.getMessage());
 		}
 	}
 
 	@Test
-	public void testDeletePolicyNotOwner() {
+	public void testDeletePolicyNotOwner() throws Exception {
 		PolicyEntity policy = new PolicyEntity();
 		policy.setAuthor("user2");
 		BDDMockito.when(policyRepository.findById(1L)).thenReturn(Optional.of(policy));
@@ -251,7 +297,28 @@ public class PolicyServiceTest {
 		BDDMockito.verify(policyRepository).flush();
 	}
 
-	private PolicyDto createValidPolicyDto() {
+	@Test
+	public void testGetUpdatedBaseStatements() {
+		PolicyEntity policy = new PolicyEntity();
+		PolicyClauseEntity clause = new PolicyClauseEntity();
+		ConfiguredStatementEntity statement = new ConfiguredStatementEntity();
+		BaseStatementEntity baseStatement = new BaseStatementEntity();
+		baseStatement.setName("base statement");
+		baseStatement.setVersion(1);
+		BaseStatementEntity updated = new BaseStatementEntity();
+		updated.setName("base statement");
+		updated.setVersion(2);
+		statement.setBaseStatement(baseStatement);
+		clause.setStatements(Collections.singletonList(statement));
+		policy.setClauses(Collections.singletonList(clause));
+		BDDMockito.when(baseStatementService.getUpdatedBaseStatement("base statement", 1))
+				.thenReturn(Optional.of(updated));
+		Assert.assertEquals(1, policyService.getUpdatedBaseStatements(policy).size());
+		Assert.assertEquals("base statement:2",
+				policyService.getUpdatedBaseStatements(policy).iterator().next());
+	}
+
+	public PolicyDto createValidPolicyDto() {
 		ConfiguredStatementDto statement = new ConfiguredStatementDto();
 		statement.setBaseStatementName("Base Statement");
 		statement.setNegated(true);
@@ -260,6 +327,8 @@ public class PolicyServiceTest {
 		clause.setStatements(Collections.singletonList(statement));
 
 		PolicyDto policy = new PolicyDto();
+		policy.setName("Name");
+		policy.setAuthor("user");
 		policy.setPolicyType("System");
 		policy.setClauses(Collections.singletonList(clause));
 		return policy;
@@ -270,6 +339,8 @@ public class PolicyServiceTest {
 		policyType.setName("System");
 		BaseStatementFunctionEntity function = new BaseStatementFunctionEntity();
 		function.setName("function_name");
+		function.setAuthor("user");
+		function.setState(PolicyElementState.RELEASED);
 		function.setDescription("A Rego function");
 		function.setPolicyTypes(Collections.singleton(policyType));
 		function.setExpression("1 == 1");
@@ -278,6 +349,9 @@ public class PolicyServiceTest {
 
 		BaseStatementEntity baseStatement = new BaseStatementEntity();
 		baseStatement.setName("Base Statement");
+		baseStatement.setAuthor("user");
+		baseStatement.setVersion(1);
+		baseStatement.setState(PolicyElementState.RELEASED);
 		baseStatement.setDescription("This is a base statement");
 		baseStatement.setPolicyTypes(Collections.singleton(policyType));
 		baseStatement.setNegationAllowed(true);

@@ -2,6 +2,8 @@ package com.tracelink.prodsec.blueprint.app.converter;
 
 import javax.persistence.AttributeConverter;
 
+import org.springframework.core.convert.converter.Converter;
+
 import com.tracelink.prodsec.blueprint.core.argument.ArgumentType;
 
 /**
@@ -10,7 +12,8 @@ import com.tracelink.prodsec.blueprint.core.argument.ArgumentType;
  *
  * @author mcool
  */
-public class ArgumentTypeConverter implements AttributeConverter<ArgumentType, String> {
+public class ArgumentTypeConverter implements AttributeConverter<ArgumentType, String>,
+		Converter<String, ArgumentType> {
 
 	/**
 	 * {@inheritDoc}
@@ -26,5 +29,13 @@ public class ArgumentTypeConverter implements AttributeConverter<ArgumentType, S
 	@Override
 	public ArgumentType convertToEntityAttribute(String dbData) {
 		return ArgumentType.getTypeForName(dbData);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ArgumentType convert(String s) {
+		return ArgumentType.getTypeForName(s);
 	}
 }

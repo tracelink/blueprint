@@ -1,5 +1,8 @@
 package com.tracelink.prodsec.blueprint.app.auth.controller;
 
+import com.tracelink.prodsec.blueprint.app.auth.UserAccountException;
+import com.tracelink.prodsec.blueprint.app.auth.service.AuthService;
+import com.tracelink.prodsec.blueprint.app.mvc.BlueprintModelAndView;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,10 +17,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-
-import com.tracelink.prodsec.blueprint.app.auth.UserAccountException;
-import com.tracelink.prodsec.blueprint.app.auth.service.AuthService;
-import com.tracelink.prodsec.blueprint.app.mvc.BlueprintModelAndView;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest

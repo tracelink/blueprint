@@ -1,12 +1,17 @@
 package com.tracelink.prodsec.blueprint.app.auth.service;
 
+import com.tracelink.prodsec.blueprint.app.auth.UserAccountException;
+import com.tracelink.prodsec.blueprint.app.auth.model.CoreRole;
+import com.tracelink.prodsec.blueprint.app.auth.model.RoleEntity;
+import com.tracelink.prodsec.blueprint.app.auth.model.UserEntity;
+import com.tracelink.prodsec.blueprint.app.auth.repository.RoleRepository;
+import com.tracelink.prodsec.blueprint.app.auth.repository.UserRepository;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -25,13 +30,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import com.tracelink.prodsec.blueprint.app.auth.UserAccountException;
-import com.tracelink.prodsec.blueprint.app.auth.model.CoreRole;
-import com.tracelink.prodsec.blueprint.app.auth.model.RoleEntity;
-import com.tracelink.prodsec.blueprint.app.auth.model.UserEntity;
-import com.tracelink.prodsec.blueprint.app.auth.repository.RoleRepository;
-import com.tracelink.prodsec.blueprint.app.auth.repository.UserRepository;
 
 @RunWith(SpringRunner.class)
 public class AuthServiceTest {
@@ -339,7 +337,7 @@ public class AuthServiceTest {
 		BDDMockito.when(userRepo.findById(1L)).thenReturn(Optional.of(user));
 		RoleEntity role = new RoleEntity();
 		BDDMockito.when(roleRepo.findById(2L)).thenReturn(Optional.of(role));
-		authService.setUserRole(1L, 2L);
+		authService.setUserRoles(1L, Collections.singletonList(2L));
 		BDDMockito.verify(userRepo).saveAndFlush(user);
 		Assert.assertTrue(user.getRoles().contains(role));
 	}
@@ -349,7 +347,7 @@ public class AuthServiceTest {
 		UserEntity user = new UserEntity();
 		BDDMockito.when(userRepo.findById(1L)).thenReturn(Optional.empty());
 		try {
-			authService.setUserRole(1L, 2L);
+			authService.setUserRoles(1L, Collections.singletonList(2L));
 			Assert.fail();
 		} catch (UserAccountException e) {
 			Assert.assertEquals("Unknown user id", e.getMessage());
@@ -364,7 +362,7 @@ public class AuthServiceTest {
 		BDDMockito.when(userRepo.findById(1L)).thenReturn(Optional.of(user));
 		BDDMockito.when(roleRepo.findById(2L)).thenReturn(Optional.empty());
 		try {
-			authService.setUserRole(1L, 2L);
+			authService.setUserRoles(1L, Collections.singletonList(2L));
 		} catch (UserAccountException e) {
 			Assert.assertEquals("Unknown role id", e.getMessage());
 		}

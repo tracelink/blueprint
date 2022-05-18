@@ -8,7 +8,7 @@ package com.tracelink.prodsec.blueprint.core.argument;
 public class IntegerArgumentType extends ArgumentType {
 
 	IntegerArgumentType() {
-		super("integer", "integer", false);
+		super("integer", "Integer", false);
 	}
 
 	/**
@@ -26,4 +26,6 @@ public class IntegerArgumentType extends ArgumentType {
 			return false;
 		}
 	}
+	
+
 }

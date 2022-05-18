@@ -1,0 +1,141 @@
+<div th:fragment="function (function, editable)" class="card card-small mb-4">
+  <div class="card-header border-bottom p-2">
+    <div class="d-flex justify-content-between">
+      <h6 class="card-title align-self-center mb-0">Function Details <span
+          th:if="${function.state?.name.equals('Deprecated')}"
+          class="badge mr-1 badge-outline-warning m-0 align-self-center">Deprecated</span></h6>
+      <div th:if="${editable}" class="btn-toolbar">
+        <a th:if="${function.state?.name.equals('Draft')}"
+           th:href="${functionId != null} ? '/functions/' + ${functionId} : '/functions'">
+          <button class="btn btn-light px-2 mr-1">Cancel</button>
+        </a>
+        <form th:if="${function.state?.name.equals('Draft')}" class="form-inline" id="save-form"
+              method="POST"
+              th:action="${functionId != null} ? '/functions/' + ${functionId} + '/save' : '/functions/save'">
+          <button type="submit" class="btn btn-info px-2 mr-1">Save</button>
+        </form>
+      </div>
+      <div th:if="${!editable}" class="btn-toolbar">
+        <a th:if="${function.state?.name.equals('Draft')}"
+           th:href="'/functions/' + ${functionId} + '/edit'">
+          <button class="btn btn-secondary px-2 mr-1">Edit</button>
+        </a>
+        <form th:if="${function.state?.name.equals('Released') && nextVersionId == null}"
+              class="form-inline" method="POST"
+              th:action="'/functions/' + ${functionId} + '/create-revision'">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <button type="submit" class="btn btn-primary px-2 mr-1">Create revision</button>
+        </form>
+        <form th:if="${function.state?.name.equals('Draft')}" class="form-inline" method="POST"
+              th:action="'/functions/' + ${functionId} + '/state/released'">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <button type="submit" class="btn btn-warning px-2 mr-1">Release</button>
+        </form>
+        <form th:if="${function.state?.name.equals('Released')}" class="form-inline"
+              method="POST" th:action="'/functions/' + ${functionId} + '/state/deprecated'">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <button type="submit" class="btn btn-warning px-2 mr-1">Deprecate</button>
+        </form>
+        <form th:if="${function.author.equals(#authentication.getPrincipal().getUsername())}"
+              class="form-inline" method="POST"
+              th:action="'/functions/' + ${functionId} + '/delete'">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <button type="submit" class="btn btn-danger px-2">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <div th:unless="${updatedDependencies == null || updatedDependencies.isEmpty()}"
+         class="alert alert-info alert-dismissible fade show" role="alert">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+          aria-hidden="true">×</span></button>
+      <div
+          th:text="${'This function has outdated dependencies. Consider updating to the latest versions: ' + #strings.listJoin(updatedDependencies, ', ')}"></div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-6">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" form="save-form" autocomplete="off"
+               th:class="${functionId != null} ? 'form-control-plaintext' : 'form-control'"
+               placeholder="Function Name" th:value="${function.name}"
+               th:readonly="${functionId != null}">
+      </div>
+      <div class="col-2">
+        <label for="version">Version</label>
+        <input type="text" class="form-control-plaintext" id="version" name="version"
+               form="save-form" th:value="${function.version}" readonly>
+      </div>
+      <div class="col-2">
+        <label for="state">State</label>
+        <input type="text" class="form-control-plaintext" id="state" name="state"
+               form="save-form" th:value="${function.state?.name}" readonly>
+      </div>
+      <div class="col-2">
+        <label for="author">Author</label>
+        <input type="text" class="form-control-plaintext" id="author" name="author"
+               form="save-form" th:value="${function.author}" readonly>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col">
+        <label for="description">Description</label>
+        <textarea class="form-control" id="description" name="description" form="save-form"
+                  placeholder="Function Description" th:text="${function.description}"
+                  rows="3" th:disabled="${!editable}"></textarea>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-auto">
+        <label for="policyTypes">Policy Types</label>
+        <fieldset th:disabled="${!editable}" id="policyTypes">
+          <div th:each="policyType : ${policyTypes}" class="custom-control custom-checkbox">
+            <input type="checkbox" class="custom-control-input" name="policyTypes"
+                   form="save-form"
+                   th:value="${policyType}" th:id="'policyType-' + ${policyType}"
+                   th:checked="${#lists.contains(function.policyTypes, policyType)}">
+            <label class="custom-control-label" th:for="'policyType-' + ${policyType}"
+                   th:text="${policyType}"></label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="col">
+        <label for="parameters">Parameters</label>
+        <input type="text" class="form-control mb-2" id="parameters" name="parameters"
+               form="save-form"
+               th:placeholder="${editable} ? 'Comma-separated list of function parameters' : 'No function parameters defined'"
+               th:value="${#strings.listJoin(function.parameters, ', ')}"
+               th:readonly="${!editable}">
+        <label for="dependencies">Dependencies</label>
+        <input type="text" class="form-control" id="dependencies" name="dependencies"
+               form="save-form" th:value="${#strings.listJoin(function.dependencies, ', ')}"
+               th:placeholder="${editable} ? 'Comma-separated list of function dependencies, including versions' : 'No function dependencies defined'"
+               th:readonly="${!editable}">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <label for="expression">Rego Expression</label>
+        <textarea th:class="${editable} ? 'form-control code-edit' : 'code-static'" form="save-form"
+                  id="expression" name="expression" th:text="${function.expression}"
+                  placeholder="Body of Rego function, not including name and parameters"
+                  th:disabled="${!editable}">
+        </textarea>
+      </div>
+    </div>
+  </div>
+  <div th:if="${functionId != null && (prevVersionId != null || nextVersionId != null)}"
+       class="card-footer p-2">
+    <a th:if="${prevVersionId != null}" th:href="'/functions/' + ${prevVersionId}"
+       th:target="${editable} ? '_blank' : ''">
+      <button class="btn btn-light float-left">
+        <i class="material-icons" th:text="${editable} ? 'launch' : 'west'"></i> Previous Version
+      </button>
+    </a>
+    <a th:if="${nextVersionId != null}" th:href="'/functions/' + ${nextVersionId}">
+      <button class="btn btn-light float-right">
+        Next Version <i class="material-icons">east</i>
+      </button>
+    </a>
+  </div>
+</div>

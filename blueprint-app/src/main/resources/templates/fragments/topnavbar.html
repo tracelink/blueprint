@@ -13,29 +13,35 @@
     <div class="col-auto ml-auto">
       <div class="row">
         <div class="nav-link text-center px-0">
-          <a class="btn" href="/policies"><i class="material-icons">policy</i> Policies</a>
-        </div>
-        <!--        <div class="nav-link text-center px-0"-->
-        <!--             sec:authorize="hasAnyAuthority(T(com.tracelink.prodsec.blueprint.app.auth.model.CoreRole).CREATOR_ROLE, T(com.tracelink.prodsec.blueprint.app.auth.model.CoreRole).ADMIN_ROLE)">-->
-        <!--          <a class="btn" href="/creator"><i class="material-icons">edit</i> Creator</a>-->
-        <!--        </div>-->
-        <div class="nav-link text-center px-0"
-             sec:authorize="hasAnyAuthority(T(com.tracelink.prodsec.blueprint.app.auth.model.CoreRole).ADMIN_ROLE)">
-          <a class="btn" href="/usermgmt"><i class="material-icons">account_circle</i> User Mgmt</a>
+          <a class="btn px-2" href="/policies"><i class="material-icons">policy</i> Policies</a>
         </div>
         <div class="nav-link text-center px-0"
+             sec:authorize="hasAnyAuthority(T(com.tracelink.prodsec.blueprint.app.auth.model.CoreRole).BASE_STMT_EDITOR_ROLE, T(com.tracelink.prodsec.blueprint.app.auth.model.CoreRole).ADMIN_ROLE)">
+          <a class="btn px-2" href="/base-statements"><i class="material-icons">category</i> Base
+            Statements</a>
+        </div>
+        <div class="nav-link text-center px-0"
+             sec:authorize="hasAnyAuthority(T(com.tracelink.prodsec.blueprint.app.auth.model.CoreRole).FUNCTION_EDITOR_ROLE, T(com.tracelink.prodsec.blueprint.app.auth.model.CoreRole).ADMIN_ROLE)">
+          <a class="btn px-2" href="/functions"><i class="material-icons">code</i> Functions</a>
+        </div>
+        <div class="nav-link text-center px-0"
              sec:authorize="hasAnyAuthority(T(com.tracelink.prodsec.blueprint.app.auth.model.CoreRole).ADMIN_ROLE)">
-          <a class="btn" target="__blank" href="/console"><i class="material-icons">memory</i>
+          <a class="btn px-2" href="/usermgmt"><i class="material-icons">account_circle</i> User
+            Mgmt</a>
+        </div>
+        <div class="nav-link text-center px-0"
+             sec:authorize="hasAnyAuthority(T(com.tracelink.prodsec.blueprint.app.auth.model.CoreRole).ADMIN_ROLE)">
+          <a class="btn px-2" target="__blank" href="/console"><i class="material-icons">memory</i>
             Console</a>
         </div>
         <div class="nav-link text-center px-0">
-          <a class="btn" href="/profile"> <i class="material-icons">&#xE7FD;</i> Profile</a>
+          <a class="btn px-2" href="/profile"> <i class="material-icons">&#xE7FD;</i> Profile</a>
         </div>
         <div class="nav-link text-center px-0">
           <form method="POST" action="/logout">
             <input type="hidden" th:name="${_csrf.parameterName}"
                    th:value="${_csrf.token}"/>
-            <button class="nav-link nav-link-icon text-danger btn" type="submit">
+            <button class="nav-link nav-link-icon text-danger btn px-2" type="submit">
               <i class="material-icons text-danger">&#xE879;</i> Logout
             </button>
           </form>

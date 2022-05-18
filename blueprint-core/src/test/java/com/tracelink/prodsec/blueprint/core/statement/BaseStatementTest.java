@@ -1,13 +1,11 @@
 package com.tracelink.prodsec.blueprint.core.statement;
 
+import com.tracelink.prodsec.blueprint.core.policy.ConfiguredStatement;
+import com.tracelink.prodsec.blueprint.core.policy.Policy;
+import com.tracelink.prodsec.blueprint.core.policy.PolicyClause;
 import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.tracelink.prodsec.blueprint.core.policy.PolicyType;
-import com.tracelink.prodsec.blueprint.core.statement.BaseStatement;
-import com.tracelink.prodsec.blueprint.core.statement.BaseStatementArgument;
-import com.tracelink.prodsec.blueprint.core.statement.BaseStatementFunction;
 
 public class BaseStatementTest {
 
@@ -51,11 +49,11 @@ public class BaseStatementTest {
 		BaseStatement statement1 = new BaseStatement();
 		statement1.setName("n");
 		statement1.setDescription("d");
-		statement1.setPolicyTypes(Collections.singleton(new PolicyType("User")));
+		statement1.setPolicyTypes(Collections.singleton("User"));
 		BaseStatement statement2 = new BaseStatement();
 		statement2.setName("n");
 		statement2.setDescription("d");
-		statement2.setPolicyTypes(Collections.singleton(new PolicyType("System")));
+		statement2.setPolicyTypes(Collections.singleton("System"));
 		Assert.assertNotEquals(statement1, statement2);
 	}
 
@@ -69,12 +67,12 @@ public class BaseStatementTest {
 		BaseStatement statement1 = new BaseStatement();
 		statement1.setName("n");
 		statement1.setDescription("d");
-		statement1.setPolicyTypes(Collections.singleton(new PolicyType("User")));
+		statement1.setPolicyTypes(Collections.singleton("User"));
 		statement1.setFunction(function1);
 		BaseStatement statement2 = new BaseStatement();
 		statement2.setName("n");
 		statement2.setDescription("d");
-		statement2.setPolicyTypes(Collections.singleton(new PolicyType("User")));
+		statement2.setPolicyTypes(Collections.singleton("User"));
 		statement2.setFunction(function2);
 
 		Assert.assertNotEquals(statement1, statement2);
@@ -83,7 +81,7 @@ public class BaseStatementTest {
 	@Test
 	public void testEqualsDifferentArguments() {
 		BaseStatementArgument argument1 = new BaseStatementArgument();
-		argument1.setConstant(true);
+		argument1.setParameter("param");
 		BaseStatementArgument argument2 = new BaseStatementArgument();
 		BaseStatementFunction function = new BaseStatementFunction();
 		function.setName("f");
@@ -91,13 +89,13 @@ public class BaseStatementTest {
 		BaseStatement statement1 = new BaseStatement();
 		statement1.setName("n");
 		statement1.setDescription("d");
-		statement1.setPolicyTypes(Collections.singleton(new PolicyType("User")));
+		statement1.setPolicyTypes(Collections.singleton("User"));
 		statement1.setFunction(function);
 		statement1.setArguments(Collections.singletonList(argument1));
 		BaseStatement statement2 = new BaseStatement();
 		statement2.setName("n");
 		statement2.setDescription("d");
-		statement2.setPolicyTypes(Collections.singleton(new PolicyType("User")));
+		statement2.setPolicyTypes(Collections.singleton("User"));
 		statement2.setFunction(function);
 		statement2.setArguments(Collections.singletonList(argument2));
 
@@ -107,20 +105,19 @@ public class BaseStatementTest {
 	@Test
 	public void testEqualsAllSame() {
 		BaseStatementArgument argument = new BaseStatementArgument();
-		argument.setConstant(true);
 		BaseStatementFunction function = new BaseStatementFunction();
 		function.setName("f");
 
 		BaseStatement statement1 = new BaseStatement();
 		statement1.setName("n");
 		statement1.setDescription("d");
-		statement1.setPolicyTypes(Collections.singleton(new PolicyType("User")));
+		statement1.setPolicyTypes(Collections.singleton("User"));
 		statement1.setFunction(function);
 		statement1.setArguments(Collections.singletonList(argument));
 		BaseStatement statement2 = new BaseStatement();
 		statement2.setName("n");
 		statement2.setDescription("d");
-		statement2.setPolicyTypes(Collections.singleton(new PolicyType("User")));
+		statement2.setPolicyTypes(Collections.singleton("User"));
 		statement2.setFunction(function);
 		statement2.setArguments(Collections.singletonList(argument));
 
@@ -131,12 +128,29 @@ public class BaseStatementTest {
 	public void testGetters() {
 		BaseStatement baseStatement = new BaseStatement();
 		baseStatement.setName("name");
+		baseStatement.setAuthor("author");
+		baseStatement.setVersion(1);
 		baseStatement.setDescription("description");
 		baseStatement.setNegationAllowed(true);
 
 		Assert.assertEquals("name", baseStatement.getName());
+		Assert.assertEquals("author", baseStatement.getAuthor());
+		Assert.assertEquals(1, baseStatement.getVersion());
 		Assert.assertEquals("description", baseStatement.getDescription());
 		Assert.assertTrue(baseStatement.isNegationAllowed());
+	}
+
+	@Test
+	public void testGetRoot() {
+		BaseStatement baseStatement = new BaseStatement();
+		Assert.assertEquals(baseStatement, baseStatement.getRoot());
+		ConfiguredStatement configuredStatement = new ConfiguredStatement();
+		configuredStatement.setBaseStatement(baseStatement);
+		PolicyClause clause = new PolicyClause();
+		clause.setStatements(Collections.singletonList(configuredStatement));
+		Policy policy = new Policy();
+		policy.setClauses(Collections.singletonList(clause));
+		Assert.assertEquals(policy, baseStatement.getRoot());
 	}
 
 }

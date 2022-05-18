@@ -1,16 +1,15 @@
 package com.tracelink.prodsec.blueprint.core.policy;
 
+import com.tracelink.prodsec.blueprint.core.report.PolicyBuilderReport;
+import com.tracelink.prodsec.blueprint.core.visitor.AbstractPolicyNode;
+import com.tracelink.prodsec.blueprint.core.visitor.PolicyVisitor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
-
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-
-import com.tracelink.prodsec.blueprint.core.rules.PolicyReport;
-import com.tracelink.prodsec.blueprint.core.rules.PolicyVisitor;
 
 /**
  * Model for a single policy clause in a policy.
@@ -19,24 +18,13 @@ import com.tracelink.prodsec.blueprint.core.rules.PolicyVisitor;
  */
 public class PolicyClause extends AbstractPolicyNode {
 
+	private Policy parent;
+	private int index;
 	@NotEmpty(message = "A policy clause must have at least one configured statement")
 	private List<@NotNull(message = "Configured statements cannot be null") @Valid ConfiguredStatement> statements = new ArrayList<>();
-	private final Policy policy;
 
-	private int index;
-
-	public PolicyClause(Policy parent) {
-		this.policy = parent;
-	}
-
-	public List<ConfiguredStatement> getStatements() {
-		return statements;
-	}
-
-	public void setStatements(List<ConfiguredStatement> statements) {
-		IntStream.range(0, statements.size())
-			.forEach(stmtIndex -> statements.get(stmtIndex).setIndex(stmtIndex));
-		this.statements = statements;
+	public void setParent(Policy parent) {
+		this.parent = parent;
 	}
 
 	public void setIndex(int index) {
@@ -45,6 +33,17 @@ public class PolicyClause extends AbstractPolicyNode {
 
 	public int getIndex() {
 		return this.index;
+	}
+
+	public List<ConfiguredStatement> getStatements() {
+		return statements;
+	}
+
+	public void setStatements(List<ConfiguredStatement> statements) {
+		// Set parent and index
+		statements.forEach(statement -> statement.setParent(this));
+		IntStream.range(0, statements.size()).forEach(idx -> statements.get(idx).setIndex(idx));
+		this.statements = statements;
 	}
 
 	@Override
@@ -70,13 +69,13 @@ public class PolicyClause extends AbstractPolicyNode {
 	}
 
 	@Override
-	public PolicyReport accept(PolicyVisitor visitor, PolicyReport report) {
+	public PolicyBuilderReport accept(PolicyVisitor visitor, PolicyBuilderReport report) {
 		return visitor.visit(this, report);
 	}
 
 	@Override
 	public Policy getParent() {
-		return policy;
+		return parent;
 	}
 
 	@Override

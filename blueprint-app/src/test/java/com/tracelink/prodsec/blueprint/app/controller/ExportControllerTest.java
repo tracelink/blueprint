@@ -1,5 +1,8 @@
 package com.tracelink.prodsec.blueprint.app.controller;
 
+import com.tracelink.prodsec.blueprint.app.exception.PolicyException;
+import com.tracelink.prodsec.blueprint.app.policy.PolicyDto;
+import com.tracelink.prodsec.blueprint.app.service.PolicyService;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,10 +19,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-
-import com.tracelink.prodsec.blueprint.app.exception.PolicyException;
-import com.tracelink.prodsec.blueprint.app.policy.PolicyDto;
-import com.tracelink.prodsec.blueprint.app.service.PolicyService;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest

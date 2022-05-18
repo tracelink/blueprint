@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 public class IntegerArrayArgumentType extends ArgumentType {
 
 	IntegerArrayArgumentType() {
-		super("integerArray", "integer array", true);
+		super("integerArray", "Integer Array", true);
 	}
 
 	/**
@@ -49,7 +49,7 @@ public class IntegerArrayArgumentType extends ArgumentType {
 				return null;
 			}
 			return "[" + integers.stream().map(String::valueOf).collect(Collectors.joining(", "))
-				+ "]";
+					+ "]";
 		} catch (NumberFormatException e) {
 			return null;
 		}
@@ -64,6 +64,14 @@ public class IntegerArrayArgumentType extends ArgumentType {
 			return null;
 		}
 		return Arrays.stream(configuredArgument.split(",")).map(String::trim).map(Integer::parseInt)
-			.collect(Collectors.toList());
+				.collect(Collectors.toList());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ArgumentType getBaseType() {
+		return new IntegerArgumentType();
 	}
 }

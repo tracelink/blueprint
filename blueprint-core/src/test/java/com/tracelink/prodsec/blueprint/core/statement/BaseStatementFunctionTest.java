@@ -6,10 +6,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 
-import com.tracelink.prodsec.blueprint.core.policy.PolicyType;
-import com.tracelink.prodsec.blueprint.core.statement.BaseStatementArgument;
-import com.tracelink.prodsec.blueprint.core.statement.BaseStatementFunction;
-
 public class BaseStatementFunctionTest {
 
 	@Test
@@ -44,11 +40,11 @@ public class BaseStatementFunctionTest {
 		BaseStatementFunction function1 = new BaseStatementFunction();
 		function1.setName("n");
 		function1.setDescription("d");
-		function1.setPolicyTypes(Collections.singleton(new PolicyType("Enterprise")));
+		function1.setPolicyTypes(Collections.singleton("Enterprise"));
 		BaseStatementFunction function2 = new BaseStatementFunction();
 		function2.setName("n");
 		function2.setDescription("d");
-		function2.setPolicyTypes(Collections.singleton(new PolicyType("Multienterprise")));
+		function2.setPolicyTypes(Collections.singleton("Multienterprise"));
 		Assert.assertNotEquals(function1, function2);
 	}
 
@@ -57,12 +53,12 @@ public class BaseStatementFunctionTest {
 		BaseStatementFunction function1 = new BaseStatementFunction();
 		function1.setName("n");
 		function1.setDescription("d");
-		function1.setPolicyTypes(Collections.singleton(new PolicyType("Enterprise")));
+		function1.setPolicyTypes(Collections.singleton("Enterprise"));
 		function1.setParameters(Collections.singletonList("p1"));
 		BaseStatementFunction function2 = new BaseStatementFunction();
 		function2.setName("n");
 		function2.setDescription("d");
-		function2.setPolicyTypes(Collections.singleton(new PolicyType("Enterprise")));
+		function2.setPolicyTypes(Collections.singleton("Enterprise"));
 		function2.setParameters(Collections.singletonList("p2"));
 		Assert.assertNotEquals(function1, function2);
 	}
@@ -72,34 +68,15 @@ public class BaseStatementFunctionTest {
 		BaseStatementFunction function1 = new BaseStatementFunction();
 		function1.setName("n");
 		function1.setDescription("d");
-		function1.setPolicyTypes(Collections.singleton(new PolicyType("Enterprise")));
+		function1.setPolicyTypes(Collections.singleton("Enterprise"));
 		function1.setParameters(Collections.singletonList("p"));
 		function1.setExpression("e1");
 		BaseStatementFunction function2 = new BaseStatementFunction();
 		function2.setName("n");
 		function2.setDescription("d");
-		function2.setPolicyTypes(Collections.singleton(new PolicyType("Enterprise")));
+		function2.setPolicyTypes(Collections.singleton("Enterprise"));
 		function2.setParameters(Collections.singletonList("p"));
 		function2.setExpression("e2");
-		Assert.assertNotEquals(function1, function2);
-	}
-
-	@Test
-	public void testEqualsDifferentDependencies() {
-		BaseStatementFunction function1 = new BaseStatementFunction();
-		function1.setName("n");
-		function1.setDescription("d");
-		function1.setPolicyTypes(Collections.singleton(new PolicyType("Enterprise")));
-		function1.setParameters(Collections.singletonList("p"));
-		function1.setExpression("e");
-		function1.setDependencies(Collections.emptySet());
-		BaseStatementFunction function2 = new BaseStatementFunction();
-		function2.setName("n");
-		function2.setDescription("d");
-		function2.setPolicyTypes(Collections.singleton(new PolicyType("Enterprise")));
-		function2.setParameters(Collections.singletonList("p"));
-		function2.setExpression("e");
-		function2.setDependencies(Collections.singleton(new BaseStatementFunction()));
 		Assert.assertNotEquals(function1, function2);
 	}
 
@@ -108,14 +85,14 @@ public class BaseStatementFunctionTest {
 		BaseStatementFunction function1 = new BaseStatementFunction();
 		function1.setName("n");
 		function1.setDescription("d");
-		function1.setPolicyTypes(Collections.singleton(new PolicyType("Enterprise")));
+		function1.setPolicyTypes(Collections.singleton("Enterprise"));
 		function1.setParameters(Collections.singletonList("p"));
 		function1.setExpression("e");
 		function1.setDependencies(Collections.emptySet());
 		BaseStatementFunction function2 = new BaseStatementFunction();
 		function2.setName("n");
 		function2.setDescription("d");
-		function2.setPolicyTypes(Collections.singleton(new PolicyType("Enterprise")));
+		function2.setPolicyTypes(Collections.singleton("Enterprise"));
 		function2.setParameters(Collections.singletonList("p"));
 		function2.setExpression("e");
 		function2.setDependencies(Collections.emptySet());
@@ -138,19 +115,29 @@ public class BaseStatementFunctionTest {
 	@Test
 	public void testGetters() {
 		BaseStatementFunction function = new BaseStatementFunction();
+		function.setAuthor("author");
+		function.setVersion(1);
 		function.setDescription("description");
-		function.setPolicyTypes(Collections.singleton(new PolicyType("Enterprise")));
+		function.setPolicyTypes(Collections.singleton("Enterprise"));
 		function.setParameters(Collections.singletonList("foo"));
 		function.setExpression("1 == 1");
 		function.setDependencies(Collections.emptySet());
 
+		Assert.assertEquals("author", function.getAuthor());
+		Assert.assertEquals(1, function.getVersion());
 		Assert.assertEquals("description", function.getDescription());
 		Assert.assertEquals(1, function.getPolicyTypes().size());
-		Assert.assertTrue(function.getPolicyTypes().contains(new PolicyType("Enterprise")));
+		Assert.assertTrue(function.getPolicyTypes().contains("Enterprise"));
 		Assert.assertEquals(1, function.getParameters().size());
 		Assert.assertTrue(function.getParameters().contains("foo"));
 		Assert.assertEquals("1 == 1", function.getExpression());
 		Assert.assertTrue(function.getDependencies().isEmpty());
+	}
+
+	@Test
+	public void testGetAllDependenciesNull() {
+		Assert.assertEquals(Collections.emptySet(),
+				new BaseStatementFunction().getAllDependencies());
 	}
 
 }

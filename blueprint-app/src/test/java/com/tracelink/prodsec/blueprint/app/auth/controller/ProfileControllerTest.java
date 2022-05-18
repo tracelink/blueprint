@@ -1,5 +1,8 @@
 package com.tracelink.prodsec.blueprint.app.auth.controller;
 
+import com.tracelink.prodsec.blueprint.app.auth.model.UserEntity;
+import com.tracelink.prodsec.blueprint.app.auth.service.AuthService;
+import com.tracelink.prodsec.blueprint.app.mvc.BlueprintModelAndView;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,18 +16,16 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import com.tracelink.prodsec.blueprint.app.auth.model.UserEntity;
-import com.tracelink.prodsec.blueprint.app.auth.service.AuthService;
-import com.tracelink.prodsec.blueprint.app.mvc.BlueprintModelAndView;
-
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("dev")
 public class ProfileControllerTest {
 
 	@Autowired

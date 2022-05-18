@@ -1,9 +1,11 @@
+package blueprint
+
 default allow = false
 
 {{#policy.clauses~}}
 allow {
 	{{~#each statements as |statement|}}
-	{{#statement.negated}}not {{/statement.negated}}{{statement.baseStatement.function.name}}{{#statement.baseStatement.arguments.length}}({{/statement.baseStatement.arguments.length}}{{#each statement.baseStatement.arguments as |argument|}}{{#if @index}}, {{/if}}{{#argument.constant}}{{argument.value}}{{/argument.constant}}{{^argument.constant}}{{configuredArg argument.type (lookup statement.argumentValues @index)}}{{/argument.constant}}{{/each}}{{#statement.baseStatement.arguments.length}}){{/statement.baseStatement.arguments.length}}{{/each}}
+	{{#statement.negated}}not {{/statement.negated}}{{statement.baseStatement.function.name}}{{#statement.baseStatement.arguments.length}}({{/statement.baseStatement.arguments.length}}{{#each statement.baseStatement.arguments as |argument|}}{{#if @index}}, {{/if}}{{configuredArg argument.type (lookup statement.argumentValues @index)}}{{/each}}{{#statement.baseStatement.arguments.length}}){{/statement.baseStatement.arguments.length}}{{/each}}
 }
 
 {{/policy.clauses}}

@@ -1,11 +1,16 @@
 package com.tracelink.prodsec.blueprint.app.auth.controller;
 
+import com.tracelink.prodsec.blueprint.app.auth.UserAccountException;
+import com.tracelink.prodsec.blueprint.app.auth.model.CoreRole;
+import com.tracelink.prodsec.blueprint.app.auth.model.RoleEntity;
+import com.tracelink.prodsec.blueprint.app.auth.model.UserEntity;
+import com.tracelink.prodsec.blueprint.app.auth.service.AuthService;
+import com.tracelink.prodsec.blueprint.app.mvc.BlueprintModelAndView;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -18,22 +23,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import com.tracelink.prodsec.blueprint.app.auth.UserAccountException;
-import com.tracelink.prodsec.blueprint.app.auth.model.CoreRole;
-import com.tracelink.prodsec.blueprint.app.auth.model.RoleEntity;
-import com.tracelink.prodsec.blueprint.app.auth.model.UserEntity;
-import com.tracelink.prodsec.blueprint.app.auth.service.AuthService;
-import com.tracelink.prodsec.blueprint.app.mvc.BlueprintModelAndView;
-
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("dev")
 public class UserManagementControllerTest {
 
 	@Autowired
@@ -158,7 +158,7 @@ public class UserManagementControllerTest {
 		BDDMockito.when(mockAuthService.findById(BDDMockito.anyLong())).thenReturn(user);
 
 		return mockMvc.perform(MockMvcRequestBuilders.post("/usermgmt/1/setrole")
-				.param("roleId", String.valueOf(role.getId()))
+				.param("roleIds", String.valueOf(role.getId()))
 				.with(SecurityMockMvcRequestPostProcessors.csrf()));
 	}
 
@@ -169,7 +169,7 @@ public class UserManagementControllerTest {
 				.findById(BDDMockito.anyLong());
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/usermgmt/1/setrole")
-				.param("roleId", "1").with(SecurityMockMvcRequestPostProcessors.csrf()))
+				.param("roleIds", "1").with(SecurityMockMvcRequestPostProcessors.csrf()))
 				.andExpect(
 						MockMvcResultMatchers.flash()
 								.attribute(BlueprintModelAndView.FAILURE_NOTIFICATION,
@@ -184,7 +184,7 @@ public class UserManagementControllerTest {
 
 		BDDMockito.when(mockAuthService.findById(BDDMockito.anyLong())).thenReturn(user);
 		mockMvc.perform(MockMvcRequestBuilders.post("/usermgmt/1/setrole")
-				.param("roleId", "1").with(SecurityMockMvcRequestPostProcessors.csrf()))
+				.param("roleIds", "1").with(SecurityMockMvcRequestPostProcessors.csrf()))
 				.andExpect(
 						MockMvcResultMatchers.flash()
 								.attribute(BlueprintModelAndView.FAILURE_NOTIFICATION,

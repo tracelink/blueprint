@@ -1,6 +1,7 @@
 package com.tracelink.prodsec.blueprint.app.auth.controller;
 
 import java.security.Principal;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -72,7 +73,7 @@ public class UserManagementController {
 	}
 
 	@PostMapping("/{userid}/setrole")
-	public String setRole(@PathVariable Long userid, Long roleId,
+	public String setRole(@PathVariable Long userid, @RequestParam List<Long> roleIds,
 			RedirectAttributes redirectAttributes, Principal principal) {
 		try {
 			UserEntity user = authService.findById(userid);
@@ -80,7 +81,7 @@ public class UserManagementController {
 				redirectAttributes.addFlashAttribute(BlueprintModelAndView.FAILURE_NOTIFICATION,
 						"Cannot edit own information");
 			} else {
-				authService.setUserRole(userid, roleId);
+				authService.setUserRoles(userid, roleIds);
 				redirectAttributes.addFlashAttribute(BlueprintModelAndView.SUCCESS_NOTIFICATION,
 						"Successfully set role");
 			}

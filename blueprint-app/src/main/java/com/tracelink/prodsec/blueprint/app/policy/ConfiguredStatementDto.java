@@ -2,7 +2,6 @@ package com.tracelink.prodsec.blueprint.app.policy;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import javax.validation.constraints.NotBlank;
 
@@ -41,23 +40,5 @@ public class ConfiguredStatementDto {
 
 	public void setArgumentValues(List<String> argumentValues) {
 		this.argumentValues = argumentValues;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
-		ConfiguredStatementDto that = (ConfiguredStatementDto) o;
-		return negated == that.negated && Objects.equals(baseStatementName, that.baseStatementName)
-				&& Objects.equals(argumentValues, that.argumentValues);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(baseStatementName, negated, argumentValues);
 	}
 }
