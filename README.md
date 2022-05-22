@@ -70,8 +70,8 @@ Blueprint is defined with four core roles that can be assigned to give users dif
 
 ## Authors
 
-[Maddie Cool](https://github.com/madisoncool)
-[Chris Smith](https://github.com/tophersmith)
+- [Maddie Cool](https://github.com/madisoncool)
+- [Chris Smith](https://github.com/tophersmith)
 
 ## License
 
